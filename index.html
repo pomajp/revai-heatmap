@@ -369,6 +369,16 @@
         
         /* Mobile Responsiveness */
         @media (max-width: 768px) {
+            body {
+                overflow-x: hidden;
+            }
+            
+            .container {
+                width: 100%;
+                max-width: 100%;
+                box-shadow: none;
+            }
+            
             h1 {
                 font-size: 1.5em;
             }
@@ -411,7 +421,12 @@
             }
             
             .visualization-container {
-                padding: 15px 10px;
+                padding: 15px 5px;
+                overflow-x: hidden;
+            }
+            
+            #heatmap-container {
+                overflow-x: hidden;
             }
             
             .modal-content {
@@ -419,8 +434,16 @@
                 margin: 2% auto;
             }
             
+            .axis-label {
+                font-size: 10px;
+            }
+            
             .cell-value {
-                font-size: 14px;
+                font-size: 10px;
+            }
+            
+            .tooltip {
+                font-size: 12px;
             }
         }
         
@@ -559,6 +582,9 @@
         </div>
         
         <div class="visualization-container">
+            <p id="mobile-hint" style="display: none; text-align: center; color: #6b7280; font-size: 12px; margin: 0 0 10px 0;">
+                Tap once to preview, tap again to view details
+            </p>
             <div id="heatmap-container">
                 <div class="loading">
                     <div class="loading-spinner"></div>
@@ -589,6 +615,8 @@
         // Load data and initialize visualization
         let globalData = null;
         let currentData = null;
+        let lastTappedCell = null;
+        let tapTimeout = null;
         
         // Use absolute URL to ensure it works on GitHub Pages
         const dataUrl = window.location.hostname === 'pomajp.github.io' 
@@ -728,6 +756,11 @@
             // Clear existing heatmap
             d3.select("#heatmap-container").selectAll("*").remove();
             
+            // Show mobile hint if on mobile
+            if (window.innerWidth <= 768) {
+                document.getElementById('mobile-hint').style.display = 'block';
+            }
+            
             // Create mapped solution types
             const mappedSolutionTypes = data.solutionTypes.map(type => 
                 solutionTypeMap[type] || type
@@ -735,13 +768,22 @@
             
             // Dynamically adjust cell size based on viewport
             const viewportWidth = window.innerWidth;
-            let cellSize = viewportWidth < 768 ? 50 : 70;
-            const margin = {
-                top: viewportWidth < 768 ? 80 : 100, 
-                right: 20, 
-                bottom: 30, 
-                left: viewportWidth < 768 ? 130 : 180
-            };
+            const containerWidth = document.getElementById('heatmap-container').offsetWidth;
+            
+            // Calculate cell size to fit within viewport on mobile
+            let cellSize;
+            let margin;
+            
+            if (viewportWidth < 768) {
+                // Mobile: calculate cell size to fit within viewport
+                margin = { top: 80, right: 10, bottom: 30, left: 100 };
+                const availableWidth = containerWidth - margin.left - margin.right;
+                cellSize = Math.min(50, Math.floor(availableWidth / mappedSolutionTypes.length));
+            } else {
+                // Desktop
+                cellSize = 70;
+                margin = { top: 100, right: 20, bottom: 30, left: 180 };
+            }
             
             const width = mappedSolutionTypes.length * cellSize + margin.left + margin.right;
             const height = data.roles.length * cellSize + margin.top + margin.bottom;
@@ -749,7 +791,7 @@
             // Create SVG
             const svg = d3.select("#heatmap-container")
                 .append("svg")
-                .attr("width", width)
+                .attr("width", viewportWidth < 768 ? '100%' : width)
                 .attr("height", height)
                 .attr("viewBox", `0 0 ${width} ${height}`)
                 .attr("preserveAspectRatio", "xMidYMid meet");
@@ -796,9 +838,39 @@
                         .on("mouseover", function(event) {
                             showTooltip(event, role, solutionType, value);
                         })
-                        .on("mouseout", hideTooltip)
-                        .on("click", function() {
-                            showDetails(role, solutionType, data);
+                        .on("mouseout", function() {
+                            if (window.innerWidth > 768) {
+                                hideTooltip();
+                            }
+                        })
+                        .on("click", function(event) {
+                            if (window.innerWidth <= 768) {
+                                // Mobile behavior: two-tap
+                                const cellKey = `${role}-${solutionType}`;
+                                
+                                if (lastTappedCell === cellKey) {
+                                    // Second tap - open details
+                                    showDetails(role, solutionType, data);
+                                    lastTappedCell = null;
+                                    hideTooltip();
+                                } else {
+                                    // First tap - show tooltip
+                                    lastTappedCell = cellKey;
+                                    showTooltip(event, role, solutionType, value);
+                                    
+                                    // Clear previous timeout
+                                    if (tapTimeout) clearTimeout(tapTimeout);
+                                    
+                                    // Hide tooltip after 3 seconds
+                                    tapTimeout = setTimeout(() => {
+                                        hideTooltip();
+                                        lastTappedCell = null;
+                                    }, 3000);
+                                }
+                            } else {
+                                // Desktop behavior - immediate open
+                                showDetails(role, solutionType, data);
+                            }
                         });
                     
                     // Add text label for non-zero values
