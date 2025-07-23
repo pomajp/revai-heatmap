@@ -745,9 +745,9 @@
             font-size: 0.9rem;
         }
         
-        .experimental-toggle {
-            background: rgba(147, 51, 234, 0.2);
-            border: 1px solid rgb(147, 51, 234);
+        .view-toggle {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgb(59, 130, 246);
             color: white;
             padding: 0.75rem 1.5rem;
             border-radius: 8px;
@@ -758,55 +758,40 @@
             display: block;
         }
         
-        .experimental-toggle:hover {
-            background: rgba(147, 51, 234, 0.4);
+        .view-toggle:hover {
+            background: rgba(59, 130, 246, 0.4);
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
         
-        .experimental-toggle.active {
-            background: rgba(147, 51, 234, 0.6);
-            box-shadow: 0 0 20px rgba(147, 51, 234, 0.5);
+        .view-toggle.active {
+            background: rgba(59, 130, 246, 0.6);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
         }
         
-        .jobs-legend {
-            display: none;
-            margin: 1rem 0;
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .axis-label {
+            font-size: 12px;
+            fill: white;
         }
         
-        .jobs-legend h3 {
-            color: white;
-            margin: 0 0 0.5rem 0;
-            font-size: 1rem;
+        .heatmap-cell {
+            transition: all 0.2s ease;
         }
         
-        .job-items {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            font-size: 0.85rem;
+        .heatmap-cell:hover {
+            stroke-width: 3 !important;
         }
-        
-        .job-item {
-            padding: 0.25rem 0.75rem;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            color: rgba(255, 255, 255, 0.8);
-        }
+
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>Revenue AI Use Cases Heatmap</h1>
-            <div class="subtitle">Interactive visualization of AI solutions built across roles and solution types</div>
+            <div class="subtitle">Interactive visualization of AI solutions built by Revenue teams</div>
             <div style="margin-top: 1rem;">
-                <button id="experimentalToggle" class="experimental-toggle" onclick="toggleExperimentalView()">
-                    🧪 Experimental: Jobs View
+                <button id="viewToggle" class="view-toggle" onclick="toggleView()">
+                    📊 Switch to Type View
                 </button>
             </div>
         </div>
@@ -836,7 +821,7 @@
             </div>
         </div>
         
-        <div class="legend" id="defaultLegend">
+        <div class="legend">
             <div class="legend-item">
                 <span>Low Activity</span>
                 <svg width="180" height="20">
@@ -852,13 +837,6 @@
                     <rect width="180" height="20" fill="url(#legend-gradient)" rx="4" />
                 </svg>
                 <span>High Activity</span>
-            </div>
-        </div>
-        
-        <div class="jobs-legend" id="jobsLegend">
-            <h3>Jobs to be Done Categories:</h3>
-            <div class="job-items" id="jobCategories">
-                <!-- Will be populated by JavaScript -->
             </div>
         </div>
         
@@ -948,8 +926,40 @@
         let lastTappedCell = null;
         let tapTimeout = null;
         let jobsData = null;
-        let isExperimentalView = false;
+        let isTaskView = true; // Default to task view
         const tooltip = d3.select('.tooltip');
+        
+        // Role name mappings
+        const roleNameMap = {
+            'Account Executive': 'Sales',
+            'Launch Consultant': 'Launch',
+            'MSM': 'MSM',
+            'Operations': 'Ops',
+            'Partnerships': 'Partner',
+            'Solution Engineer': 'SE',
+            'SDR': 'SDR',
+            'Store': 'Store',
+            'Partner Solutions Engineer': 'Partner SE',
+            'Product Marketing Manager': 'PMM',
+            'Product Marketer': 'PMM',
+            'ProServe (not in list, so excluded)': 'ProServe',
+            'Sales Development Rep': 'SDR'
+        };
+        
+        // Task name mappings (from jobs)
+        const taskNameMap = {
+            'Content Generation & Localization': 'Content Gen',
+            'Account Intelligence & Research': 'Intel/Research',
+            'Sales Process Optimization': 'Process Optimization',
+            'Product & Demo Creation': 'Prod/Demo Creation',
+            'Knowledge Centralization': 'Knowledge Mgmt',
+            'Data Analysis & Reporting': 'Data/Reporting',
+            'Workflow Automation': 'Automation',
+            'Communication & Outreach': 'Outreach',
+            'Learning & Training': 'Learning',
+            'Partner & Collaboration': 'Partner',
+            'Other': 'Other'
+        };
         
         // Use absolute URL to ensure it works on GitHub Pages
         const dataUrl = window.location.hostname === 'pomajp.github.io' 
@@ -975,16 +985,18 @@
                 currentData = data;
                 csvData = data.allEntries || [];
                 initializeFilters(data);
-                updateStats(data);
-                createHeatmap(data);
                 
-                // Load jobs data for experimental view
+                // Load jobs data for task view
                 return fetch(jobsDataUrl);
             })
             .then(response => response.json())
             .then(data => {
                 jobsData = data;
                 console.log('Jobs data loaded:', data);
+                
+                // Start with task view
+                updateStats(jobsData);
+                createTasksHeatmap(jobsData);
             })
             .catch(error => {
                 console.error('Error loading data:', error);
@@ -1062,43 +1074,35 @@
                 solutionTypes: activeSolutionTypes.length > 0 ? activeSolutionTypes : globalData.solutionTypes
             };
             
-            updateStats(currentData);
-            createHeatmap(currentData);
+            currentData = filteredData;
+            
+            // Update view based on current mode
+            if (isTaskView) {
+                updateStats(jobsData);
+                createTasksHeatmap(jobsData);
+            } else {
+                updateStats(currentData);
+                createTypeHeatmap(currentData);
+            }
         }
         
         function resetFilters() {
             document.getElementById('region-filter').value = 'all';
             document.getElementById('date-filter').value = 'all';
             currentData = globalData;
-            updateStats(globalData);
-            createHeatmap(globalData);
-        }
-        
-        function updateStats(data) {
-            const statsContainer = document.getElementById('stats-container');
-            const activeRoles = data.roles ? data.roles.length : 0;
             
-            statsContainer.innerHTML = `
-                <div class="stat-card" onclick="showAllSolutions()" style="cursor: pointer;">
-                    <p class="stat-number">${data.totalEntries}</p>
-                    <p class="stat-label">Total Solutions</p>
-                </div>
-                <div class="stat-card" onclick="showRolesList()" style="cursor: pointer;">
-                    <p class="stat-number">${data.roles.length}</p>
-                    <p class="stat-label">Unique Roles</p>
-                </div>
-                <div class="stat-card" onclick="showSolutionTypesList()" style="cursor: pointer;">
-                    <p class="stat-number">${data.solutionTypes.length}</p>
-                    <p class="stat-label">Solution Types</p>
-                </div>
-                <div class="stat-card">
-                    <p class="stat-number">${activeRoles}</p>
-                    <p class="stat-label">Active Roles</p>
-                </div>
-            `;
+            if (isTaskView) {
+                updateStats(jobsData);
+                createTasksHeatmap(jobsData);
+            } else {
+                updateStats(globalData);
+                createTypeHeatmap(globalData);
+            }
         }
         
-        function createHeatmap(data) {
+
+        
+        function createTypeHeatmap(data) {
             // Clear existing heatmap
             d3.select("#heatmap-container").selectAll("*").remove();
             
@@ -1107,53 +1111,45 @@
                 document.getElementById('mobile-hint').style.display = 'block';
             }
             
-            // Create mapped solution types
-            const mappedSolutionTypes = data.solutionTypes.map(type => 
-                solutionTypeMap[type] || type
-            );
-            
             // Dynamically adjust cell size based on viewport
             const viewportWidth = window.innerWidth;
             const containerWidth = document.getElementById('heatmap-container').offsetWidth;
             
-            // Calculate cell size to fit within viewport on mobile
+            // Calculate cell size similar to tasks view
             let cellSize;
             let margin;
             
             if (viewportWidth < 768) {
-                // Mobile: calculate cell size to fit within viewport
-                margin = { top: 80, right: 10, bottom: 30, left: 100 };
-                const availableWidth = containerWidth - margin.left - margin.right;
-                cellSize = Math.min(50, Math.floor(availableWidth / mappedSolutionTypes.length));
+                // Mobile
+                cellSize = 40;
+                margin = { top: 100, right: 20, bottom: 120, left: 150 };
             } else {
                 // Desktop
-                cellSize = 70;
-                margin = { top: 100, right: 20, bottom: 30, left: 180 };
+                cellSize = 60;
+                margin = { top: 150, right: 20, bottom: 120, left: 180 };
             }
             
-            const width = mappedSolutionTypes.length * cellSize + margin.left + margin.right;
-            const height = data.roles.length * cellSize + margin.top + margin.bottom;
+            const width = Math.max(containerWidth, data.roles.length * cellSize + margin.left + margin.right);
+            const height = data.solutionTypes.length * cellSize + margin.top + margin.bottom;
             
             // Create SVG
             const svg = d3.select("#heatmap-container")
                 .append("svg")
-                .attr("width", viewportWidth < 768 ? '100%' : width)
-                .attr("height", height)
-                .attr("viewBox", `0 0 ${width} ${height}`)
-                .attr("preserveAspectRatio", "xMidYMid meet");
+                .attr("width", width)
+                .attr("height", height);
             
             const g = svg.append("g")
                 .attr("transform", `translate(${margin.left},${margin.top})`);
             
-            // Create scales
+            // Create scales - roles on X, types on Y
             const xScale = d3.scaleBand()
-                .domain(data.solutionTypes)
-                .range([0, mappedSolutionTypes.length * cellSize])
+                .domain(data.roles)
+                .range([0, data.roles.length * cellSize])
                 .padding(0.05);
             
             const yScale = d3.scaleBand()
-                .domain(data.roles)
-                .range([0, data.roles.length * cellSize])
+                .domain(data.solutionTypes)
+                .range([0, data.solutionTypes.length * cellSize])
                 .padding(0.05);
             
             // Find max value for color scale
@@ -1169,14 +1165,14 @@
                 .domain([0, maxValue])
                 .interpolator(t => d3.interpolateBlues(t * 0.9 + 0.1)); // Avoid pure white
             
-            // Create cells
-            data.roles.forEach((role, i) => {
-                data.solutionTypes.forEach((solutionType, j) => {
+            // Create cells - roles on X, types on Y
+            data.solutionTypes.forEach((solutionType, j) => {
+                data.roles.forEach((role, i) => {
                     const value = (data.matrix && data.matrix[role] && data.matrix[role][solutionType]) || 0;
                     
                     const cell = g.append("rect")
-                        .attr("x", xScale(solutionType))
-                        .attr("y", yScale(role))
+                        .attr("x", xScale(role))
+                        .attr("y", yScale(solutionType))
                         .attr("width", xScale.bandwidth())
                         .attr("height", yScale.bandwidth())
                         .attr("class", "cell")
@@ -1234,33 +1230,33 @@
                 });
             });
             
-            // Add x-axis labels
+            // Add x-axis labels - roles at the bottom
             g.selectAll(".x-axis-label")
-                .data(data.solutionTypes)
+                .data(data.roles)
                 .enter()
                 .append("text")
                 .attr("class", "x-axis-label axis-label")
                 .attr("x", d => xScale(d) + xScale.bandwidth() / 2)
-                .attr("y", -10)
-                .attr("transform", d => `rotate(-45, ${xScale(d) + xScale.bandwidth() / 2}, -10)`)
-                .style("text-anchor", "end")
-                .text(d => solutionTypeMap[d] || d);
+                .attr("y", data.solutionTypes.length * cellSize + 10)
+                .attr("transform", d => `rotate(45, ${xScale(d) + xScale.bandwidth() / 2}, ${data.solutionTypes.length * cellSize + 10})`)
+                .style("text-anchor", "start")
+                .style("font-size", viewportWidth < 768 ? "10px" : "11px")
+                .style("fill", "white")
+                .text(d => roleNameMap[d] || d);
             
-            // Add y-axis labels with proper truncation for long labels
+            // Add y-axis labels - solution types on the left
             g.selectAll(".y-axis-label")
-                .data(data.roles)
+                .data(data.solutionTypes)
                 .enter()
                 .append("text")
                 .attr("class", "y-axis-label axis-label")
                 .attr("x", -15)
                 .attr("y", d => yScale(d) + yScale.bandwidth() / 2)
                 .attr("dominant-baseline", "middle")
-                .text(d => {
-                    // Truncate very long labels
-                    return d.length > 20 ? d.substring(0, 17) + '...' : d;
-                })
-                .append("title")
-                .text(d => d); // Full text in tooltip
+                .style("text-anchor", "end")
+                .style("font-size", viewportWidth < 768 ? "10px" : "12px")
+                .style("fill", "white")
+                .text(d => solutionTypeMap[d] || d);
         }
         
         // Define solutionTypeMap globally
@@ -1278,11 +1274,12 @@
         function showTooltip(event, role, solutionType, value) {
             const tooltip = d3.select(".tooltip");
             const percentage = ((value / currentData.totalEntries) * 100).toFixed(1);
-            const displayName = solutionTypeMap[solutionType] || solutionType;
+            const displayType = solutionTypeMap[solutionType] || solutionType;
+            const displayRole = roleNameMap[role] || role;
             
             tooltip.html(`
-                <strong>${role}</strong><br/>
-                <strong>${displayName}</strong><br/>
+                <strong>${displayRole}</strong><br/>
+                <strong>${displayType}</strong><br/>
                 Solutions: ${value}<br/>
                 ${percentage}% of total
             `)
@@ -1295,21 +1292,38 @@
             d3.select(".tooltip").style("opacity", 0);
         }
         
-        function showDetails(role, solutionType, data) {
+        // Generic modal function for both views
+        function showModal(title, entries) {
             const modal = document.getElementById("modal");
             const modalTitle = document.getElementById("modal-title");
             const modalBody = document.getElementById("modal-body");
             
+            modalTitle.textContent = `${title} (${entries.length} solutions)`;
+            
+            // Sort entries by date in reverse chronological order (most recent first)
+            entries.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+            
+            renderModalContent(entries, modalBody);
+            
+            modal.style.display = "block";
+            document.getElementById('list-view-btn').classList.add('active');
+            document.getElementById('cloud-view-btn').classList.remove('active');
+            document.getElementById('word-cloud').style.display = 'none';
+        }
+        
+        function showDetails(role, solutionType, data) {
             // Filter entries for this cell
             const relevantEntries = data.allEntries.filter(entry => 
                 entry.roles.includes(role) && entry.solutionType === solutionType
             );
             
             const displayName = solutionTypeMap[solutionType] || solutionType;
-            modalTitle.textContent = `${role} - ${displayName} (${relevantEntries.length} solutions)`;
-            
-            // Sort entries by date in reverse chronological order (most recent first)
-            relevantEntries.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+            const displayRole = roleNameMap[role] || role;
+            showModal(`${displayRole} - ${displayName}`, relevantEntries);
+        }
+        
+        function renderModalContent(relevantEntries, modalBody) {
+            const modal = document.getElementById("modal");
             
             // Build modal content
             let content = '';
@@ -1325,7 +1339,7 @@
                         <div class="solution-title">${entry.title || 'Untitled'}</div>
                         <div class="solution-meta">
                             <span>👤 ${entry.author}</span>
-                            <span>🌍 ${entry.region || 'Unknown Region'}</span>
+                            <span>🌍 ${entry.creatorRegion || 'Unknown Region'}</span>
                             <span>📅 ${date}</span>
                         </div>
                         <div class="solution-description">
@@ -1344,7 +1358,6 @@
             });
             
             modalBody.innerHTML = content;
-            modal.style.display = "block";
             document.body.style.overflow = 'hidden';
             
             // Store current entries for word cloud
@@ -1569,84 +1582,71 @@
             }
         });
 
-        // Toggle experimental view
-        function toggleExperimentalView() {
-            isExperimentalView = !isExperimentalView;
-            const toggle = document.getElementById('experimentalToggle');
-            const defaultLegend = document.getElementById('defaultLegend');
-            const jobsLegend = document.getElementById('jobsLegend');
+        // Toggle between task and type view
+        function toggleView() {
+            isTaskView = !isTaskView;
+            const toggle = document.getElementById('viewToggle');
             
-            if (isExperimentalView) {
-                toggle.classList.add('active');
-                toggle.textContent = '🔬 Back to Standard View';
-                defaultLegend.style.display = 'none';
-                jobsLegend.style.display = 'block';
-                
-                // Update stats for jobs view
-                updateStatsForJobs();
-                
-                // Create jobs heatmap
-                if (jobsData) {
-                    createJobsHeatmap(jobsData);
-                }
+            if (isTaskView) {
+                toggle.textContent = '📊 Switch to Type View';
+                updateStats(jobsData);
+                createTasksHeatmap(jobsData);
             } else {
-                toggle.classList.remove('active');
-                toggle.textContent = '🧪 Experimental: Jobs View';
-                defaultLegend.style.display = 'block';
-                jobsLegend.style.display = 'none';
-                
-                // Back to standard view
+                toggle.textContent = '📋 Switch to Task View';
                 updateStats(currentData);
-                createHeatmap(currentData);
+                createTypeHeatmap(currentData);
             }
         }
         
-        // Update stats for jobs view
-        function updateStatsForJobs() {
-            if (!jobsData) return;
-            
+        // Update stats based on current view
+        function updateStats(data) {
             const statsContainer = document.getElementById('stats-container');
-            const topJobs = Object.entries(jobsData.jobCounts)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 4);
             
-            statsContainer.innerHTML = `
-                <div class="stat-card" onclick="showAllSolutions()" style="cursor: pointer;">
-                    <p class="stat-number">${jobsData.totalEntries}</p>
-                    <p class="stat-label">Total Solutions</p>
-                </div>
-                ${topJobs.map(([job, count]) => `
-                    <div class="stat-card" onclick="showJobDetail('${job}')" style="cursor: pointer;">
-                        <p class="stat-number">${count}</p>
-                        <p class="stat-label" style="font-size: 0.8rem;">${job.split(' ').slice(0, 2).join(' ')}</p>
+            if (isTaskView && data.jobCounts) {
+                // Task view stats
+                const topTasks = Object.entries(data.jobCounts)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 4);
+                
+                statsContainer.innerHTML = `
+                    <div class="stat-card" onclick="showAllSolutions()" style="cursor: pointer;">
+                        <p class="stat-number">${data.totalEntries}</p>
+                        <p class="stat-label">Total Solutions</p>
                     </div>
-                `).join('')}
-            `;
-            
-            // Populate job categories legend
-            const jobCategories = document.getElementById('jobCategories');
-            jobCategories.innerHTML = Object.keys(jobsData.jobCounts)
-                .map(job => `<div class="job-item">${job}</div>`)
-                .join('');
+                    ${topTasks.map(([task, count]) => `
+                        <div class="stat-card" onclick="showTaskDetail('${task}')" style="cursor: pointer;">
+                            <p class="stat-number">${count}</p>
+                            <p class="stat-label" style="font-size: 0.8rem;">${taskNameMap[task] || task}</p>
+                        </div>
+                    `).join('')}
+                `;
+            } else {
+                // Type view stats
+                const activeRoles = data.roles ? data.roles.length : 0;
+                
+                statsContainer.innerHTML = `
+                    <div class="stat-card" onclick="showAllSolutions()" style="cursor: pointer;">
+                        <p class="stat-number">${data.totalEntries}</p>
+                        <p class="stat-label">Total Solutions</p>
+                    </div>
+                    <div class="stat-card" onclick="showRolesList()" style="cursor: pointer;">
+                        <p class="stat-number">${data.roles.length}</p>
+                        <p class="stat-label">Unique Roles</p>
+                    </div>
+                    <div class="stat-card" onclick="showSolutionTypesList()" style="cursor: pointer;">
+                        <p class="stat-number">${data.solutionTypes.length}</p>
+                        <p class="stat-label">Solution Types</p>
+                    </div>
+                    <div class="stat-card">
+                        <p class="stat-number">${activeRoles}</p>
+                        <p class="stat-label">Active Roles</p>
+                    </div>
+                `;
+            }
         }
         
-        // Create job abbreviations
-        const jobAbbreviations = {
-            'Account Intelligence & Research': 'Account Intel',
-            'Content Generation & Localization': 'Content Gen',
-            'Sales Process Optimization': 'Sales Process',
-            'Data Analysis & Reporting': 'Data Analysis',
-            'Workflow Automation': 'Automation',
-            'Knowledge Centralization': 'Knowledge',
-            'Partner & Collaboration': 'Partner Collab',
-            'Learning & Training': 'Learning',
-            'Communication & Outreach': 'Outreach',
-            'Product & Demo Creation': 'Demo Creation',
-            'Other': 'Other'
-        };
-        
-        // Create jobs-based heatmap
-        function createJobsHeatmap(data) {
+        // Create tasks-based heatmap (default view)
+        function createTasksHeatmap(data) {
             console.log('Creating jobs heatmap with data:', data);
             
             // Clear existing heatmap
@@ -1667,8 +1667,8 @@
                 left: isMobile ? 100 : 150 
             };
             
-            const width = Math.max(containerWidth, data.jobs.length * cellSize + margin.left + margin.right);
-            const height = data.roles.length * cellSize + margin.top + margin.bottom;
+            const width = Math.max(containerWidth, data.roles.length * cellSize + margin.left + margin.right);
+            const height = data.jobs.length * cellSize + margin.top + margin.bottom;
             
             // Create SVG
             const svg = d3.select("#heatmap-container")
@@ -1679,35 +1679,35 @@
             const g = svg.append("g")
                 .attr("transform", `translate(${margin.left},${margin.top})`);
             
-            // Calculate dimensions - jobs on X, roles on Y
+            // Calculate dimensions - roles on X, tasks on Y
             const xScale = d3.scaleBand()
-                .domain(data.jobs)
-                .range([0, data.jobs.length * cellSize])
-                .padding(0.05);
-            
-            const yScale = d3.scaleBand()
                 .domain(data.roles)
                 .range([0, data.roles.length * cellSize])
                 .padding(0.05);
+            
+            const yScale = d3.scaleBand()
+                .domain(data.jobs)
+                .range([0, data.jobs.length * cellSize])
+                .padding(0.05);
                 
-            console.log('Jobs:', data.jobs);
+            console.log('Tasks:', data.jobs);
             console.log('Roles:', data.roles);
             console.log('Matrix:', data.matrix);
             
-            // Color scale - purple theme for experimental
+            // Color scale
             const maxValue = Math.max(...Object.values(data.matrix).flatMap(row => Object.values(row)));
             const colorScale = d3.scaleSequential()
                 .domain([0, maxValue])
-                .interpolator(d3.interpolatePurples);
+                .interpolator(d3.interpolateBlues);
             
             // Draw cells - iterate through all combinations
-            data.jobs.forEach(job => {
+            data.jobs.forEach(task => {
                 data.roles.forEach(role => {
-                    const value = data.matrix[job]?.[role] || 0;
+                    const value = data.matrix[task]?.[role] || 0;
                     
                     const rect = g.append("rect")
-                        .attr("x", xScale(job))
-                        .attr("y", yScale(role))
+                        .attr("x", xScale(role))
+                        .attr("y", yScale(task))
                         .attr("width", xScale.bandwidth())
                         .attr("height", yScale.bandwidth())
                         .attr("fill", value > 0 ? colorScale(value) : 'rgba(255, 255, 255, 0.05)')
@@ -1719,65 +1719,57 @@
                     if (value > 0) {
                         rect.style("cursor", "pointer")
                             .on("click", function(event) {
-                                showJobRoleDetails(job, role);
+                                showTaskRoleDetails(task, role);
                             })
                             .on("mouseover", function(event) {
-                                tooltip.style("visibility", "visible")
-                                    .html(`<strong>${job}</strong><br>${role}<br>Solutions: ${value}`);
+                                const displayTask = taskNameMap[task] || task;
+                                const displayRole = roleNameMap[role] || role;
+                                tooltip.html(`<strong>${displayTask}</strong><br>${displayRole}<br>Solutions: ${value}`)
+                                    .style("left", (event.pageX + 10) + "px")
+                                    .style("top", (event.pageY - 28) + "px")
+                                    .style("opacity", 1);
                                 d3.select(this).attr("stroke-width", 3);
                             })
                             .on("mousemove", function(event) {
-                                tooltip.style("top", (event.pageY - 10) + "px")
-                                    .style("left", (event.pageX + 10) + "px");
+                                tooltip.style("left", (event.pageX + 10) + "px")
+                                    .style("top", (event.pageY - 28) + "px");
                             })
                             .on("mouseout", function() {
-                                tooltip.style("visibility", "hidden");
+                                tooltip.style("opacity", 0);
                                 d3.select(this).attr("stroke-width", 1);
                             });
                     }
                 });
             });
             
-            // X axis - jobs at the bottom
+            // X axis - roles at the bottom
             g.append("g")
-                .attr("transform", `translate(0, ${data.roles.length * cellSize + 10})`)
+                .attr("transform", `translate(0, ${data.jobs.length * cellSize + 10})`)
                 .selectAll("text")
-                .data(data.jobs)
+                .data(data.roles)
                 .enter().append("text")
+                .attr("class", "axis-label")
                 .attr("x", d => xScale(d) + xScale.bandwidth() / 2)
                 .attr("y", 0)
                 .attr("text-anchor", "start")
                 .attr("transform", d => `rotate(45, ${xScale(d) + xScale.bandwidth() / 2}, 0)`)
-                .style("font-size", isMobile ? "10px" : "11px")
-                .style("fill", "white")
-                .text(d => jobAbbreviations[d] || d);
+                .text(d => roleNameMap[d] || d);
             
-            // Y axis - roles on the left
+            // Y axis - tasks on the left
             g.append("g")
                 .selectAll("text")
-                .data(data.roles)
+                .data(data.jobs)
                 .enter().append("text")
+                .attr("class", "axis-label")
                 .attr("x", -10)
                 .attr("y", d => yScale(d) + yScale.bandwidth() / 2)
                 .attr("text-anchor", "end")
                 .attr("alignment-baseline", "middle")
-                .style("font-size", isMobile ? "10px" : "12px")
-                .style("fill", "white")
-                .text(d => d);
-                
-            // Title for experimental view
-            svg.append("text")
-                .attr("x", width / 2)
-                .attr("y", margin.top / 2)
-                .attr("text-anchor", "middle")
-                .style("font-size", "16px")
-                .style("fill", "white")
-                .style("font-weight", "bold")
-                .text("Revenue AI Solutions by Jobs to be Done");
+                .text(d => taskNameMap[d] || d);
         }
         
-        // Show details for job-role combination
-        function showJobRoleDetails(job, role) {
+        // Show details for task-role combination
+        function showTaskRoleDetails(task, role) {
             const filteredData = csvData.filter(item => {
                 const itemRoles = item.roles.split(';').map(r => r.trim());
                 return itemRoles.includes(role);
@@ -1801,15 +1793,17 @@
                     'Product & Demo Creation': ['demo', 'mockup', 'prototype', 'build']
                 };
                 
-                const keywords = jobPatterns[job] || [];
+                const keywords = jobPatterns[task] || [];
                 return keywords.some(keyword => combined.includes(keyword));
             });
             
-            showModal(`${job} - ${role}`, filteredData);
+            const displayTask = taskNameMap[task] || task;
+            const displayRole = roleNameMap[role] || role;
+            showModal(`${displayTask} - ${displayRole}`, filteredData);
         }
         
-        // Show job detail view
-        function showJobDetail(job) {
+        // Show task detail view
+        function showTaskDetail(task) {
             currentView = 'job';
             currentListFilters.clear();
             const filteredData = csvData.filter(item => {
@@ -1831,11 +1825,12 @@
                     'Product & Demo Creation': ['demo', 'mockup', 'prototype', 'build']
                 };
                 
-                const keywords = jobPatterns[job] || [];
+                const keywords = jobPatterns[task] || [];
                 return keywords.some(keyword => combined.includes(keyword));
             });
             
-            showModal(`Job: ${job}`, filteredData);
+            const displayTask = taskNameMap[task] || task;
+            showModal(`Task: ${displayTask}`, filteredData);
         }
         
         // List view functions
