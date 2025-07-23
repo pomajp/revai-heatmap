@@ -679,7 +679,7 @@
             
             currentData = {
                 ...globalData,
-                heatmapData: newHeatmapData,
+                matrix: newHeatmapData,
                 roleCounts: newRoleCounts,
                 solutionCounts: newSolutionCounts,
                 totalEntries: filteredEntries.length,
@@ -702,7 +702,7 @@
         
         function updateStats(data) {
             const statsContainer = document.getElementById('stats-container');
-            const activeRoles = Object.keys(data.roleCounts || data.heatmapData).length;
+            const activeRoles = data.roles ? data.roles.length : 0;
             
             statsContainer.innerHTML = `
                 <div class="stat-card">
@@ -770,7 +770,7 @@
             
             // Find max value for color scale
             let maxValue = 0;
-            Object.values(data.heatmapData).forEach(solutionTypes => {
+            Object.values(data.matrix || {}).forEach(solutionTypes => {
                 Object.values(solutionTypes).forEach(value => {
                     maxValue = Math.max(maxValue, value);
                 });
@@ -784,7 +784,7 @@
             // Create cells
             data.roles.forEach((role, i) => {
                 data.solutionTypes.forEach((solutionType, j) => {
-                    const value = (data.heatmapData[role] && data.heatmapData[role][solutionType]) || 0;
+                    const value = (data.matrix && data.matrix[role] && data.matrix[role][solutionType]) || 0;
                     
                     const cell = g.append("rect")
                         .attr("x", xScale(solutionType))
