@@ -1630,6 +1630,21 @@
                 .join('');
         }
         
+        // Create job abbreviations
+        const jobAbbreviations = {
+            'Account Intelligence & Research': 'Account Intel',
+            'Content Generation & Localization': 'Content Gen',
+            'Sales Process Optimization': 'Sales Process',
+            'Data Analysis & Reporting': 'Data Analysis',
+            'Workflow Automation': 'Automation',
+            'Knowledge Centralization': 'Knowledge',
+            'Partner & Collaboration': 'Partner Collab',
+            'Learning & Training': 'Learning',
+            'Communication & Outreach': 'Outreach',
+            'Product & Demo Creation': 'Demo Creation',
+            'Other': 'Other'
+        };
+        
         // Create jobs-based heatmap
         function createJobsHeatmap(data) {
             console.log('Creating jobs heatmap with data:', data);
@@ -1638,9 +1653,22 @@
             d3.select("#heatmap-container").selectAll("*").remove();
             
             const container = document.getElementById("heatmap-container");
-            const width = container.clientWidth;
-            const margin = { top: 150, right: 50, bottom: 120, left: 250 };
-            const height = Math.max(400, data.jobs.length * 35) + margin.top + margin.bottom;
+            const containerWidth = container.clientWidth;
+            
+            // Mobile detection
+            const isMobile = window.innerWidth <= 768;
+            
+            // Calculate dimensions similar to default heatmap
+            let cellSize = isMobile ? 40 : 60;
+            const margin = { 
+                top: isMobile ? 100 : 150, 
+                right: 20, 
+                bottom: isMobile ? 80 : 120, 
+                left: isMobile ? 100 : 150 
+            };
+            
+            const width = Math.max(containerWidth, data.jobs.length * cellSize + margin.left + margin.right);
+            const height = data.roles.length * cellSize + margin.top + margin.bottom;
             
             // Create SVG
             const svg = d3.select("#heatmap-container")
@@ -1651,15 +1679,15 @@
             const g = svg.append("g")
                 .attr("transform", `translate(${margin.left},${margin.top})`);
             
-            // Calculate dimensions
+            // Calculate dimensions - jobs on X, roles on Y
             const xScale = d3.scaleBand()
-                .domain(data.roles)
-                .range([0, width - margin.left - margin.right])
+                .domain(data.jobs)
+                .range([0, data.jobs.length * cellSize])
                 .padding(0.05);
             
             const yScale = d3.scaleBand()
-                .domain(data.jobs)
-                .range([0, data.jobs.length * 35])
+                .domain(data.roles)
+                .range([0, data.roles.length * cellSize])
                 .padding(0.05);
                 
             console.log('Jobs:', data.jobs);
@@ -1672,21 +1700,24 @@
                 .domain([0, maxValue])
                 .interpolator(d3.interpolatePurples);
             
-            // Draw cells
+            // Draw cells - iterate through all combinations
             data.jobs.forEach(job => {
                 data.roles.forEach(role => {
                     const value = data.matrix[job]?.[role] || 0;
+                    
+                    const rect = g.append("rect")
+                        .attr("x", xScale(job))
+                        .attr("y", yScale(role))
+                        .attr("width", xScale.bandwidth())
+                        .attr("height", yScale.bandwidth())
+                        .attr("fill", value > 0 ? colorScale(value) : 'rgba(255, 255, 255, 0.05)')
+                        .attr("stroke", "white")
+                        .attr("stroke-width", 1)
+                        .attr("rx", 4)
+                        .attr("class", "heatmap-cell");
+                    
                     if (value > 0) {
-                        g.append("rect")
-                            .attr("x", xScale(role))
-                            .attr("y", yScale(job))
-                            .attr("width", xScale.bandwidth())
-                            .attr("height", yScale.bandwidth())
-                            .attr("fill", colorScale(value))
-                            .attr("stroke", "white")
-                            .attr("stroke-width", 1)
-                            .attr("rx", 4)
-                            .attr("class", "heatmap-cell")
+                        rect.style("cursor", "pointer")
                             .on("click", function(event) {
                                 showJobRoleDetails(job, role);
                             })
@@ -1707,32 +1738,42 @@
                 });
             });
             
-            // X axis - at the bottom
+            // X axis - jobs at the bottom
             g.append("g")
-                .attr("transform", `translate(0, ${data.jobs.length * 35})`)
-                .selectAll("text")
-                .data(data.roles)
-                .enter().append("text")
-                .attr("x", d => xScale(d) + xScale.bandwidth() / 2)
-                .attr("y", 10)
-                .attr("text-anchor", "start")
-                .attr("transform", d => `rotate(45, ${xScale(d) + xScale.bandwidth() / 2}, 10)`)
-                .style("font-size", "11px")
-                .style("fill", "white")
-                .text(d => d);
-            
-            // Y axis
-            g.append("g")
+                .attr("transform", `translate(0, ${data.roles.length * cellSize + 10})`)
                 .selectAll("text")
                 .data(data.jobs)
+                .enter().append("text")
+                .attr("x", d => xScale(d) + xScale.bandwidth() / 2)
+                .attr("y", 0)
+                .attr("text-anchor", "start")
+                .attr("transform", d => `rotate(45, ${xScale(d) + xScale.bandwidth() / 2}, 0)`)
+                .style("font-size", isMobile ? "10px" : "11px")
+                .style("fill", "white")
+                .text(d => jobAbbreviations[d] || d);
+            
+            // Y axis - roles on the left
+            g.append("g")
+                .selectAll("text")
+                .data(data.roles)
                 .enter().append("text")
                 .attr("x", -10)
                 .attr("y", d => yScale(d) + yScale.bandwidth() / 2)
                 .attr("text-anchor", "end")
                 .attr("alignment-baseline", "middle")
-                .style("font-size", "12px")
+                .style("font-size", isMobile ? "10px" : "12px")
                 .style("fill", "white")
                 .text(d => d);
+                
+            // Title for experimental view
+            svg.append("text")
+                .attr("x", width / 2)
+                .attr("y", margin.top / 2)
+                .attr("text-anchor", "middle")
+                .style("font-size", "16px")
+                .style("fill", "white")
+                .style("font-weight", "bold")
+                .text("Revenue AI Solutions by Jobs to be Done");
         }
         
         // Show details for job-role combination
