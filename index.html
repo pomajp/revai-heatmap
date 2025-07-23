@@ -564,179 +564,6 @@
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
         }
         
-        .list-view {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(30, 41, 59, 0.98);
-            z-index: 1000;
-            overflow-y: auto;
-            padding: 2rem;
-        }
-        
-        .list-view-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .list-view h2 {
-            color: white;
-            margin: 0;
-            font-size: 2rem;
-        }
-        
-        .close-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-        
-        .close-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-        
-        .solution-list {
-            display: grid;
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-        
-        .solution-item {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            padding: 1.5rem;
-            transition: all 0.3s ease;
-        }
-        
-        .solution-item:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateX(5px);
-        }
-        
-        .solution-item h3 {
-            color: white;
-            margin: 0 0 0.5rem 0;
-            font-size: 1.2rem;
-        }
-        
-        .solution-item .description {
-            color: rgba(255, 255, 255, 0.8);
-            margin-bottom: 0.5rem;
-            line-height: 1.5;
-        }
-        
-        .solution-item .meta {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.6);
-        }
-        
-        .solution-item .meta span {
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-        }
-        
-        .solution-links {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 0.75rem;
-        }
-        
-        .solution-links a {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            padding: 0.25rem 0.75rem;
-            border-radius: 4px;
-            text-decoration: none;
-            font-size: 0.85rem;
-            transition: all 0.3s ease;
-        }
-        
-        .solution-links a:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-        
-        .interstitial-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-top: 2rem;
-        }
-        
-        .interstitial-item {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 2rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .interstitial-item:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-        }
-        
-        .interstitial-item h3 {
-            color: white;
-            margin: 0 0 0.5rem 0;
-            font-size: 1.5rem;
-        }
-        
-        .interstitial-item .count {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 2rem;
-            font-weight: bold;
-        }
-        
-        .list-view-cloud {
-            margin: 1.5rem 0;
-            padding: 1.5rem;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .list-view-cloud .tag {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            margin: 0.25rem;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.9rem;
-        }
-        
-        .list-view-cloud .tag:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.05);
-        }
-        
-        .list-view-cloud .tag.active {
-            background: rgba(59, 130, 246, 0.5);
-            border-color: rgb(59, 130, 246);
-        }
         
         .filter-info {
             text-align: center;
@@ -771,6 +598,13 @@
         
         .axis-label {
             font-size: 12px;
+            fill: white !important;
+            opacity: 1 !important;
+            font-weight: 500;
+        }
+        
+        /* Ensure SVG text is visible */
+        svg text {
             fill: white;
         }
         
@@ -780,6 +614,17 @@
         
         .heatmap-cell:hover {
             stroke-width: 3 !important;
+            filter: brightness(1.1);
+        }
+        
+        .cell {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .cell:hover {
+            stroke-width: 3 !important;
+            filter: brightness(1.1);
         }
 
     </style>
@@ -869,52 +714,7 @@
             <div id="word-cloud" class="word-cloud-container" style="display: none;"></div>
         </div>
     </div>
-    
-    <div id="allSolutionsView" class="list-view">
-        <div class="list-view-header">
-            <h2>All Revenue AI Solutions</h2>
-            <button class="close-btn" onclick="closeListView('allSolutionsView')">Close</button>
-        </div>
-        <div class="filter-info" id="allSolutionsFilterInfo"></div>
-        <div class="list-view-cloud" id="allSolutionsCloud"></div>
-        <div class="solution-list" id="allSolutionsList"></div>
-    </div>
-    
-    <div id="rolesListView" class="list-view">
-        <div class="list-view-header">
-            <h2>Solutions by Role</h2>
-            <button class="close-btn" onclick="closeListView('rolesListView')">Close</button>
-        </div>
-        <div class="interstitial-grid" id="rolesGrid"></div>
-    </div>
-    
-    <div id="solutionTypesListView" class="list-view">
-        <div class="list-view-header">
-            <h2>Solutions by Type</h2>
-            <button class="close-btn" onclick="closeListView('solutionTypesListView')">Close</button>
-        </div>
-        <div class="interstitial-grid" id="solutionTypesGrid"></div>
-    </div>
-    
-    <div id="roleDetailView" class="list-view">
-        <div class="list-view-header">
-            <h2 id="roleDetailTitle"></h2>
-            <button class="close-btn" onclick="closeListView('roleDetailView')">Back</button>
-        </div>
-        <div class="filter-info" id="roleDetailFilterInfo"></div>
-        <div class="list-view-cloud" id="roleDetailCloud"></div>
-        <div class="solution-list" id="roleDetailList"></div>
-    </div>
-    
-    <div id="typeDetailView" class="list-view">
-        <div class="list-view-header">
-            <h2 id="typeDetailTitle"></h2>
-            <button class="close-btn" onclick="closeListView('typeDetailView')">Back</button>
-        </div>
-        <div class="filter-info" id="typeDetailFilterInfo"></div>
-        <div class="list-view-cloud" id="typeDetailCloud"></div>
-        <div class="solution-list" id="typeDetailList"></div>
-    </div>
+
     
     <script>
         // Load data and initialize visualization
@@ -929,7 +729,7 @@
         let isTaskView = true; // Default to task view
         const tooltip = d3.select('.tooltip');
         
-        // Role name mappings
+        // Role name mappings - must match exactly what's in the JSON
         const roleNameMap = {
             'Account Executive': 'Sales',
             'Launch Consultant': 'Launch',
@@ -938,12 +738,8 @@
             'Partnerships': 'Partner',
             'Solution Engineer': 'SE',
             'SDR': 'SDR',
-            'Store': 'Store',
-            'Partner Solutions Engineer': 'Partner SE',
-            'Product Marketing Manager': 'PMM',
-            'Product Marketer': 'PMM',
-            'ProServe (not in list, so excluded)': 'ProServe',
-            'Sales Development Rep': 'SDR'
+            'Sales Development Rep': 'SDR',
+            'ProServe (not in list, so excluded)': 'ProServe'
         };
         
         // Task name mappings (from jobs)
@@ -1257,6 +1053,30 @@
                 .style("font-size", viewportWidth < 768 ? "10px" : "12px")
                 .style("fill", "white")
                 .text(d => solutionTypeMap[d] || d);
+                
+            // Add axis titles
+            // Y-axis title (Types)
+            svg.append("text")
+                .attr("class", "axis-title")
+                .attr("transform", "rotate(-90)")
+                .attr("y", margin.left / 3)
+                .attr("x", -(data.solutionTypes.length * cellSize + margin.top) / 2)
+                .attr("text-anchor", "middle")
+                .style("fill", "white")
+                .style("font-size", "14px")
+                .style("font-weight", "bold")
+                .text("Solution Types");
+                
+            // X-axis title (Roles)
+            svg.append("text")
+                .attr("class", "axis-title")
+                .attr("x", margin.left + (data.roles.length * cellSize) / 2)
+                .attr("y", margin.top + data.solutionTypes.length * cellSize + margin.bottom - 20)
+                .attr("text-anchor", "middle")
+                .style("fill", "white")
+                .style("font-size", "14px")
+                .style("font-weight", "bold")
+                .text("Roles");
         }
         
         // Define solutionTypeMap globally
@@ -1753,6 +1573,8 @@
                 .attr("y", 0)
                 .attr("text-anchor", "start")
                 .attr("transform", d => `rotate(45, ${xScale(d) + xScale.bandwidth() / 2}, 0)`)
+                .style("fill", "white")
+                .style("font-size", "12px")
                 .text(d => roleNameMap[d] || d);
             
             // Y axis - tasks on the left
@@ -1765,37 +1587,139 @@
                 .attr("y", d => yScale(d) + yScale.bandwidth() / 2)
                 .attr("text-anchor", "end")
                 .attr("alignment-baseline", "middle")
+                .style("fill", "white")
+                .style("font-size", "12px")
                 .text(d => taskNameMap[d] || d);
+                
+            // Add axis titles
+            // Y-axis title (Tasks)
+            svg.append("text")
+                .attr("class", "axis-title")
+                .attr("transform", "rotate(-90)")
+                .attr("y", margin.left / 3)
+                .attr("x", -(height - margin.top - margin.bottom) / 2)
+                .attr("text-anchor", "middle")
+                .style("fill", "white")
+                .style("font-size", "14px")
+                .style("font-weight", "bold")
+                .text("Tasks");
+                
+            // X-axis title (Roles)
+            svg.append("text")
+                .attr("class", "axis-title")
+                .attr("x", margin.left + (data.roles.length * cellSize) / 2)
+                .attr("y", height - margin.bottom / 3)
+                .attr("text-anchor", "middle")
+                .style("fill", "white")
+                .style("font-size", "14px")
+                .style("font-weight", "bold")
+                .text("Roles");
+        }
+        
+        // Helper function to get entries for a specific task
+        function getEntriesForTask(task) {
+            // Enhanced job patterns with weights matching the Python script
+            const jobPatterns = {
+                'Account Intelligence & Research': {
+                    keywords: ['research', 'analyze', 'merchant pain', 'discover', 'competitive', 'competitor',
+                               'insight', 'understand', 'overview', 'brief', 'competebot', 'vertical', 'naics'],
+                    weight: 1.5
+                },
+                'Content Generation & Localization': {
+                    keywords: ['create', 'generate', 'template', 'copy', 'marketing', 'translate',
+                               'multi-lingual', 'language', 'spanish', 'heygen', 'presentation', 'video',
+                               'webinar', 'podcast'],
+                    weight: 1.0
+                },
+                'Sales Process Optimization': {
+                    keywords: ['sales', 'account plan', 'pipeline', 'discovery', 'pitch', 'deal',
+                               'opportunity', 'outreach', 'prospecting', 'cold', 'sdr', 'boost.*sales',
+                               'copilot.*account'],
+                    weight: 1.5
+                },
+                'Data Analysis & Reporting': {
+                    keywords: ['data', 'report', 'metric', 'dashboard', 'payment rate', 'track',
+                               'monitor', 'looker', 'sql', 'query', 'analytics', 'scrape', 'print.*rates'],
+                    weight: 1.2
+                },
+                'Workflow Automation': {
+                    keywords: ['automate', 'auto-', 'scale', 'efficient', 'faster', 'streamline',
+                               'integrate', 'workflow', 'process', 'bulk', 'at scale'],
+                    weight: 1.3
+                },
+                'Knowledge Centralization': {
+                    keywords: ['centralize', 'organize', 'document', 'guide', 'wiki', 'hub',
+                               'repository', 'notebook', 'notebooklm', 'knowledge', 'vivarium'],
+                    weight: 1.2
+                },
+                'Partner & Collaboration': {
+                    keywords: ['partner', 'agency', 'collaboration', 'co-sell', 'channel',
+                               'pse', 'pdm', 'overdose', 'joint'],
+                    weight: 1.4
+                },
+                'Learning & Training': {
+                    keywords: ['learn', 'train', 'onboard', 'educate', 'enablement', 'course',
+                               'tutorial', 'how-to', 'tips', 'academy', 'trainer'],
+                    weight: 1.1
+                },
+                'Communication & Outreach': {
+                    keywords: ['communicate', 'outreach', 'email', 'share', 'messaging', 'engage',
+                               'reach', 'gmass', 'sequence', 'campaign'],
+                    weight: 1.0
+                },
+                'Product & Demo Creation': {
+                    keywords: ['demo', 'mockup', 'prototype', 'showcase', 'present', 'build',
+                               'cursor', 'create.*tool', 'html', 'converter'],
+                    weight: 1.3
+                }
+            };
+            
+            return jobsData.allEntries.filter(entry => {
+                const title = entry.title.toLowerCase();
+                const desc = entry.description.toLowerCase();
+                const combined = title + ' ' + desc;
+                
+                // Calculate scores for all jobs
+                const jobScores = {};
+                for (const [job, config] of Object.entries(jobPatterns)) {
+                    let score = 0;
+                    for (const keyword of config.keywords) {
+                        if (keyword.includes('*')) {
+                            const pattern = new RegExp(keyword.replace(/\*/g, '.*'), 'i');
+                            if (pattern.test(combined)) {
+                                score += config.weight;
+                            }
+                        } else if (combined.includes(keyword)) {
+                            score += config.weight;
+                        }
+                    }
+                    if (score > 0) {
+                        jobScores[job] = score;
+                    }
+                }
+                
+                // Assign to best matching job or 'Other'
+                if (Object.keys(jobScores).length > 0) {
+                    const bestJob = Object.keys(jobScores).reduce((a, b) => 
+                        jobScores[a] > jobScores[b] ? a : b
+                    );
+                    return bestJob === task;
+                } else {
+                    return task === 'Other';
+                }
+            });
         }
         
         // Show details for task-role combination
         function showTaskRoleDetails(task, role) {
-            const filteredData = csvData.filter(item => {
+            const taskEntries = getEntriesForTask(task);
+            const filteredData = taskEntries.filter(item => {
                 const itemRoles = item.roles.split(';').map(r => r.trim());
                 return itemRoles.includes(role);
-            }).filter(item => {
-                // Filter by job category
-                const title = item.title.toLowerCase();
-                const desc = item.description.toLowerCase();
-                const combined = title + ' ' + desc;
-                
-                // Match job patterns (simplified for display)
-                const jobPatterns = {
-                    'Account Intelligence & Research': ['research', 'analyze', 'competitive', 'insight'],
-                    'Content Generation & Localization': ['create', 'generate', 'translate', 'video'],
-                    'Sales Process Optimization': ['sales', 'account plan', 'pipeline', 'deal'],
-                    'Data Analysis & Reporting': ['data', 'report', 'metric', 'dashboard'],
-                    'Workflow Automation': ['automate', 'scale', 'efficient', 'integrate'],
-                    'Knowledge Centralization': ['centralize', 'organize', 'notebook', 'knowledge'],
-                    'Partner & Collaboration': ['partner', 'agency', 'collaboration'],
-                    'Learning & Training': ['learn', 'train', 'educate', 'enablement'],
-                    'Communication & Outreach': ['communicate', 'outreach', 'email', 'messaging'],
-                    'Product & Demo Creation': ['demo', 'mockup', 'prototype', 'build']
-                };
-                
-                const keywords = jobPatterns[task] || [];
-                return keywords.some(keyword => combined.includes(keyword));
             });
+            
+            const expectedCount = jobsData.matrix[task] ? jobsData.matrix[task][role] || 0 : 0;
+            console.log(`Task ${task} - Role ${role}: Expected ${expectedCount}, Got ${filteredData.length}`);
             
             const displayTask = taskNameMap[task] || task;
             const displayRole = roleNameMap[role] || role;
@@ -1804,289 +1728,29 @@
         
         // Show task detail view
         function showTaskDetail(task) {
-            currentView = 'job';
-            currentListFilters.clear();
-            const filteredData = csvData.filter(item => {
-                const title = item.title.toLowerCase();
-                const desc = item.description.toLowerCase();
-                const combined = title + ' ' + desc;
-                
-                // Match job patterns
-                const jobPatterns = {
-                    'Account Intelligence & Research': ['research', 'analyze', 'competitive', 'insight'],
-                    'Content Generation & Localization': ['create', 'generate', 'translate', 'video'],
-                    'Sales Process Optimization': ['sales', 'account plan', 'pipeline', 'deal'],
-                    'Data Analysis & Reporting': ['data', 'report', 'metric', 'dashboard'],
-                    'Workflow Automation': ['automate', 'scale', 'efficient', 'integrate'],
-                    'Knowledge Centralization': ['centralize', 'organize', 'notebook', 'knowledge'],
-                    'Partner & Collaboration': ['partner', 'agency', 'collaboration'],
-                    'Learning & Training': ['learn', 'train', 'educate', 'enablement'],
-                    'Communication & Outreach': ['communicate', 'outreach', 'email', 'messaging'],
-                    'Product & Demo Creation': ['demo', 'mockup', 'prototype', 'build']
-                };
-                
-                const keywords = jobPatterns[task] || [];
-                return keywords.some(keyword => combined.includes(keyword));
-            });
-            
+            const filteredData = getEntriesForTask(task);
             const displayTask = taskNameMap[task] || task;
+            console.log(`Task ${task}: Expected ${jobsData.jobCounts[task]}, Got ${filteredData.length}`);
             showModal(`Task: ${displayTask}`, filteredData);
         }
         
         // List view functions
         function showAllSolutions() {
-            currentView = 'all';
-            currentListFilters.clear();
-            document.getElementById('allSolutionsView').style.display = 'block';
-            renderAllSolutions();
+            // Show all solutions in the modal
+            showModal('All Solutions', csvData);
         }
         
         function showRolesList() {
-            document.getElementById('rolesListView').style.display = 'block';
-            renderRolesInterstitial();
+            // This shows all solutions that have been tagged with roles
+            // Each solution may have multiple roles
+            showModal('All Solutions by Role', csvData);
         }
         
         function showSolutionTypesList() {
-            document.getElementById('solutionTypesListView').style.display = 'block';
-            renderSolutionTypesInterstitial();
+            // This shows all solutions organized by their type
+            showModal('All Solutions by Type', csvData);
         }
-        
-        function closeListView(viewId) {
-            document.getElementById(viewId).style.display = 'none';
-            if (viewId === 'roleDetailView') {
-                showRolesList();
-            } else if (viewId === 'typeDetailView') {
-                showSolutionTypesList();
-            }
-        }
-        
-        function renderAllSolutions() {
-            const filteredData = currentListFilters.size > 0 
-                ? csvData.filter(item => {
-                    const itemTags = item.tags.split(',').map(t => t.trim().toLowerCase());
-                    return Array.from(currentListFilters).some(filter => 
-                        itemTags.includes(filter.toLowerCase())
-                    );
-                })
-                : csvData;
-            
-            // Build word cloud
-            const tagCounts = {};
-            filteredData.forEach(item => {
-                item.tags.split(',').forEach(tag => {
-                    const cleanTag = tag.trim();
-                    if (cleanTag) {
-                        tagCounts[cleanTag] = (tagCounts[cleanTag] || 0) + 1;
-                    }
-                });
-            });
-            
-            const cloudHtml = Object.entries(tagCounts)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 20)
-                .map(([tag, count]) => {
-                    const isActive = currentListFilters.has(tag);
-                    return `<span class="tag ${isActive ? 'active' : ''}" 
-                            onclick="toggleListFilter('${tag}')">${tag} (${count})</span>`;
-                }).join('');
-            
-            document.getElementById('allSolutionsCloud').innerHTML = cloudHtml;
-            document.getElementById('allSolutionsFilterInfo').textContent = 
-                currentListFilters.size > 0 
-                    ? `Showing ${filteredData.length} solutions filtered by: ${Array.from(currentListFilters).join(', ')}`
-                    : `Showing all ${filteredData.length} solutions`;
-            
-            const listHtml = filteredData.map(item => renderSolutionItem(item)).join('');
-            document.getElementById('allSolutionsList').innerHTML = listHtml;
-        }
-        
-        function renderRolesInterstitial() {
-            const roleCounts = {};
-            csvData.forEach(item => {
-                const roles = item.roles.split(',').map(r => r.trim());
-                roles.forEach(role => {
-                    if (role) {
-                        roleCounts[role] = (roleCounts[role] || 0) + 1;
-                    }
-                });
-            });
-            
-            const html = Object.entries(roleCounts)
-                .sort((a, b) => b[1] - a[1])
-                .map(([role, count]) => `
-                    <div class="interstitial-item" onclick="showRoleDetail('${role}')">
-                        <h3>${role}</h3>
-                        <div class="count">${count}</div>
-                        <span style="color: rgba(255, 255, 255, 0.6); font-size: 0.9rem;">solutions</span>
-                    </div>
-                `).join('');
-            
-            document.getElementById('rolesGrid').innerHTML = html;
-        }
-        
-        function renderSolutionTypesInterstitial() {
-            const typeCounts = {};
-            csvData.forEach(item => {
-                if (item.solutionType) {
-                    typeCounts[item.solutionType] = (typeCounts[item.solutionType] || 0) + 1;
-                }
-            });
-            
-            const html = Object.entries(typeCounts)
-                .sort((a, b) => b[1] - a[1])
-                .map(([type, count]) => `
-                    <div class="interstitial-item" onclick="showTypeDetail('${type}')">
-                        <h3>${type}</h3>
-                        <div class="count">${count}</div>
-                        <span style="color: rgba(255, 255, 255, 0.6); font-size: 0.9rem;">solutions</span>
-                    </div>
-                `).join('');
-            
-            document.getElementById('solutionTypesGrid').innerHTML = html;
-        }
-        
-        function showRoleDetail(role) {
-            currentView = 'role';
-            currentListFilters.clear();
-            document.getElementById('rolesListView').style.display = 'none';
-            document.getElementById('roleDetailView').style.display = 'block';
-            document.getElementById('roleDetailTitle').textContent = `${role} Solutions`;
-            renderRoleDetail(role);
-        }
-        
-        function showTypeDetail(type) {
-            currentView = 'type';
-            currentListFilters.clear();
-            document.getElementById('solutionTypesListView').style.display = 'none';
-            document.getElementById('typeDetailView').style.display = 'block';
-            document.getElementById('typeDetailTitle').textContent = `${type} Solutions`;
-            renderTypeDetail(type);
-        }
-        
-        function renderRoleDetail(role) {
-            let filteredData = csvData.filter(item => 
-                item.roles.split(',').map(r => r.trim()).includes(role)
-            );
-            
-            if (currentListFilters.size > 0) {
-                filteredData = filteredData.filter(item => {
-                    const itemTags = item.tags.split(',').map(t => t.trim().toLowerCase());
-                    return Array.from(currentListFilters).some(filter => 
-                        itemTags.includes(filter.toLowerCase())
-                    );
-                });
-            }
-            
-            // Build word cloud for this role
-            const tagCounts = {};
-            filteredData.forEach(item => {
-                item.tags.split(',').forEach(tag => {
-                    const cleanTag = tag.trim();
-                    if (cleanTag) {
-                        tagCounts[cleanTag] = (tagCounts[cleanTag] || 0) + 1;
-                    }
-                });
-            });
-            
-            const cloudHtml = Object.entries(tagCounts)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 20)
-                .map(([tag, count]) => {
-                    const isActive = currentListFilters.has(tag);
-                    return `<span class="tag ${isActive ? 'active' : ''}" 
-                            onclick="toggleListFilter('${tag}', 'role', '${role}')">${tag} (${count})</span>`;
-                }).join('');
-            
-            document.getElementById('roleDetailCloud').innerHTML = cloudHtml;
-            document.getElementById('roleDetailFilterInfo').textContent = 
-                currentListFilters.size > 0 
-                    ? `Showing ${filteredData.length} ${role} solutions filtered by: ${Array.from(currentListFilters).join(', ')}`
-                    : `Showing all ${filteredData.length} ${role} solutions`;
-            
-            const listHtml = filteredData.map(item => renderSolutionItem(item)).join('');
-            document.getElementById('roleDetailList').innerHTML = listHtml;
-        }
-        
-        function renderTypeDetail(type) {
-            let filteredData = csvData.filter(item => item.solutionType === type);
-            
-            if (currentListFilters.size > 0) {
-                filteredData = filteredData.filter(item => {
-                    const itemTags = item.tags.split(',').map(t => t.trim().toLowerCase());
-                    return Array.from(currentListFilters).some(filter => 
-                        itemTags.includes(filter.toLowerCase())
-                    );
-                });
-            }
-            
-            // Build word cloud for this type
-            const tagCounts = {};
-            filteredData.forEach(item => {
-                item.tags.split(',').forEach(tag => {
-                    const cleanTag = tag.trim();
-                    if (cleanTag) {
-                        tagCounts[cleanTag] = (tagCounts[cleanTag] || 0) + 1;
-                    }
-                });
-            });
-            
-            const cloudHtml = Object.entries(tagCounts)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 20)
-                .map(([tag, count]) => {
-                    const isActive = currentListFilters.has(tag);
-                    return `<span class="tag ${isActive ? 'active' : ''}" 
-                            onclick="toggleListFilter('${tag}', 'type', '${type}')">${tag} (${count})</span>`;
-                }).join('');
-            
-            document.getElementById('typeDetailCloud').innerHTML = cloudHtml;
-            document.getElementById('typeDetailFilterInfo').textContent = 
-                currentListFilters.size > 0 
-                    ? `Showing ${filteredData.length} ${type} solutions filtered by: ${Array.from(currentListFilters).join(', ')}`
-                    : `Showing all ${filteredData.length} ${type} solutions`;
-            
-            const listHtml = filteredData.map(item => renderSolutionItem(item)).join('');
-            document.getElementById('typeDetailList').innerHTML = listHtml;
-        }
-        
-        function renderSolutionItem(item) {
-            const date = new Date(item.updatedAt).toLocaleDateString();
-            const links = [];
-            if (item.appUrl) links.push(`<a href="${item.appUrl}" target="_blank">View App</a>`);
-            if (item.videoUrl) links.push(`<a href="${item.videoUrl}" target="_blank">Watch Video</a>`);
-            if (item.slackUrl) links.push(`<a href="${item.slackUrl}" target="_blank">Slack</a>`);
-            
-            return `
-                <div class="solution-item">
-                    <h3>${item.title}</h3>
-                    <div class="description">${item.description}</div>
-                    <div class="meta">
-                        <span>👤 ${item.author}</span>
-                        <span>📅 ${date}</span>
-                        <span>🌍 ${item.creatorRegion}</span>
-                        <span>🏷️ ${item.solutionType}</span>
-                    </div>
-                    ${links.length > 0 ? `<div class="solution-links">${links.join('')}</div>` : ''}
-                </div>
-            `;
-        }
-        
-        function toggleListFilter(tag, viewType, viewParam) {
-            if (currentListFilters.has(tag)) {
-                currentListFilters.delete(tag);
-            } else {
-                currentListFilters.add(tag);
-            }
-            
-            // Re-render the appropriate view
-            if (viewType === 'role') {
-                renderRoleDetail(viewParam);
-            } else if (viewType === 'type') {
-                renderTypeDetail(viewParam);
-            } else {
-                renderAllSolutions();
-            }
-        }
+
     </script>
 </body>
 </html> 
