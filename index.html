@@ -949,6 +949,7 @@
         let tapTimeout = null;
         let jobsData = null;
         let isExperimentalView = false;
+        const tooltip = d3.select('.tooltip');
         
         // Use absolute URL to ensure it works on GitHub Pages
         const dataUrl = window.location.hostname === 'pomajp.github.io' 
@@ -1631,13 +1632,15 @@
         
         // Create jobs-based heatmap
         function createJobsHeatmap(data) {
+            console.log('Creating jobs heatmap with data:', data);
+            
             // Clear existing heatmap
             d3.select("#heatmap-container").selectAll("*").remove();
             
             const container = document.getElementById("heatmap-container");
             const width = container.clientWidth;
-            const margin = { top: 150, right: 50, bottom: 120, left: 200 };
-            const height = Math.max(400, data.jobs.length * 30) + margin.top + margin.bottom;
+            const margin = { top: 150, right: 50, bottom: 120, left: 250 };
+            const height = Math.max(400, data.jobs.length * 35) + margin.top + margin.bottom;
             
             // Create SVG
             const svg = d3.select("#heatmap-container")
@@ -1656,8 +1659,12 @@
             
             const yScale = d3.scaleBand()
                 .domain(data.jobs)
-                .range([0, data.jobs.length * 30])
+                .range([0, data.jobs.length * 35])
                 .padding(0.05);
+                
+            console.log('Jobs:', data.jobs);
+            console.log('Roles:', data.roles);
+            console.log('Matrix:', data.matrix);
             
             // Color scale - purple theme for experimental
             const maxValue = Math.max(...Object.values(data.matrix).flatMap(row => Object.values(row)));
@@ -1700,17 +1707,17 @@
                 });
             });
             
-            // X axis
+            // X axis - at the bottom
             g.append("g")
-                .attr("transform", `translate(0, -10)`)
+                .attr("transform", `translate(0, ${data.jobs.length * 35})`)
                 .selectAll("text")
                 .data(data.roles)
                 .enter().append("text")
                 .attr("x", d => xScale(d) + xScale.bandwidth() / 2)
-                .attr("y", 0)
-                .attr("text-anchor", "end")
-                .attr("transform", d => `rotate(-45, ${xScale(d) + xScale.bandwidth() / 2}, 0)`)
-                .style("font-size", "12px")
+                .attr("y", 10)
+                .attr("text-anchor", "start")
+                .attr("transform", d => `rotate(45, ${xScale(d) + xScale.bandwidth() / 2}, 10)`)
+                .style("font-size", "11px")
                 .style("fill", "white")
                 .text(d => d);
             
