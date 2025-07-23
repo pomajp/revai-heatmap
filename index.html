@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revenue AI Use Cases Heatmap</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f7fa;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 40px rgba(0,0,0,0.08);
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 2em;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+        
+        .subtitle {
+            margin-top: 8px;
+            font-size: 0.95em;
+            opacity: 0.9;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            padding: 20px;
+            background: #fafbfc;
+            border-bottom: 1px solid #e1e4e8;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            transition: transform 0.2s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: 700;
+            color: #667eea;
+            margin: 0;
+            line-height: 1;
+        }
+        
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.85em;
+            margin-top: 5px;
+            font-weight: 500;
+        }
+        
+        .controls {
+            padding: 15px 20px;
+            background: white;
+            border-bottom: 1px solid #e1e4e8;
+        }
+        
+        .filters {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .filter-group label {
+            font-weight: 500;
+            color: #374151;
+            font-size: 0.85em;
+        }
+        
+        .filter-select {
+            padding: 8px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 0.85em;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .filter-select:hover {
+            border-color: #667eea;
+        }
+        
+        .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        #reset-filters {
+            padding: 8px 16px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        #reset-filters:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+        
+        .visualization-container {
+            padding: 20px 20px;
+            overflow-x: auto;
+        }
+        
+        #heatmap-container {
+            display: flex;
+            justify-content: center;
+            min-width: fit-content;
+        }
+        
+        .cell {
+            cursor: pointer;
+            stroke: white;
+            stroke-width: 2px;
+            transition: all 0.2s ease;
+            rx: 4;
+            ry: 4;
+        }
+        
+        .cell:hover {
+            stroke: #4b5563;
+            stroke-width: 2px;
+            filter: brightness(0.85);
+            transform: scale(1.02);
+        }
+        
+        .axis-label {
+            font-size: 12px;
+            font-weight: 600;
+            fill: #374151;
+        }
+        
+        .y-axis-label {
+            text-anchor: end;
+            font-size: 12px;
+        }
+        
+        .x-axis-label {
+            text-anchor: middle;
+        }
+        
+        .cell-value {
+            font-size: 16px;
+            font-weight: 700;
+            pointer-events: none;
+        }
+        
+        .tooltip {
+            position: absolute;
+            padding: 12px 16px;
+            background: rgba(17, 24, 39, 0.95);
+            color: white;
+            border-radius: 8px;
+            pointer-events: none;
+            font-size: 14px;
+            line-height: 1.5;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.2s;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        .legend {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 20px 15px 20px;
+            gap: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        
+        .legend-gradient {
+            width: 180px;
+            height: 20px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            overflow-y: auto;
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 85vh;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .modal-header {
+            padding: 24px 30px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fafbfc;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            color: #1f2937;
+            font-size: 1.5em;
+        }
+        
+        .close {
+            color: #6b7280;
+            font-size: 28px;
+            font-weight: 300;
+            cursor: pointer;
+            line-height: 1;
+            transition: color 0.2s;
+        }
+        
+        .close:hover {
+            color: #1f2937;
+        }
+        
+        .modal-body {
+            padding: 30px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        
+        .solution-item {
+            border-bottom: 1px solid #f3f4f6;
+            padding: 20px 0;
+            transition: background 0.2s;
+        }
+        
+        .solution-item:hover {
+            background: #fafbfc;
+            margin: 0 -30px;
+            padding: 20px 30px;
+        }
+        
+        .solution-item:last-child {
+            border-bottom: none;
+        }
+        
+        .solution-title {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        
+        .solution-meta {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 12px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .solution-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .solution-description {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #4b5563;
+        }
+        
+        .solution-links {
+            margin-top: 12px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .solution-links a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 6px 12px;
+            border: 1px solid #667eea;
+            border-radius: 6px;
+            transition: all 0.2s;
+            display: inline-block;
+        }
+        
+        .solution-links a:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.5em;
+            }
+            
+            .subtitle {
+                font-size: 0.85em;
+            }
+            
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+                padding: 15px;
+            }
+            
+            .stat-card {
+                padding: 12px;
+            }
+            
+            .stat-number {
+                font-size: 1.8em;
+            }
+            
+            .filters {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .legend {
+                padding: 0 15px 10px 15px;
+            }
+            
+            .legend-item {
+                font-size: 11px;
+                gap: 8px;
+            }
+            
+            .legend-gradient {
+                width: 140px;
+                height: 16px;
+            }
+            
+            .visualization-container {
+                padding: 15px 10px;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 2% auto;
+            }
+            
+            .cell-value {
+                font-size: 14px;
+            }
+        }
+        
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f4f6;
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .error {
+            text-align: center;
+            padding: 60px 20px;
+            color: #ef4444;
+        }
+        
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 0 20px;
+        }
+        
+        .view-btn {
+            padding: 8px 16px;
+            border: 1px solid #e5e7eb;
+            background-color: #ffffff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .view-btn.active {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        
+        .view-btn:hover:not(.active) {
+            background-color: #f3f4f6;
+        }
+        
+        .word-cloud-container {
+            padding: 20px;
+            height: 500px;
+            overflow: auto;
+            text-align: center;
+        }
+        
+        .word-cloud-word {
+            display: inline-block;
+            padding: 4px 8px;
+            margin: 4px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: #1f2937;
+        }
+        
+        .word-cloud-word:hover {
+            background-color: #e5e7eb;
+            transform: scale(1.1);
+        }
+        
+        .word-cloud-word.selected {
+            background-color: #3b82f6;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Revenue AI Use Cases Heatmap</h1>
+            <div class="subtitle">Interactive visualization of AI solutions built across roles and solution types</div>
+        </div>
+        
+        <div class="stats" id="stats-container">
+            <!-- Stats will be populated by JavaScript -->
+        </div>
+        
+        <div class="controls">
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="region-filter">Region:</label>
+                    <select id="region-filter" class="filter-select">
+                        <option value="all">All Regions</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="date-filter">Time Period:</label>
+                    <select id="date-filter" class="filter-select">
+                        <option value="all">All Time</option>
+                        <option value="30">Last 30 days</option>
+                        <option value="60">Last 60 days</option>
+                        <option value="90">Last 90 days</option>
+                    </select>
+                </div>
+                <button id="reset-filters">Reset Filters</button>
+            </div>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <span>Low Activity</span>
+                <svg width="180" height="20">
+                    <defs>
+                        <linearGradient id="legend-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style="stop-color:#f0f9ff;stop-opacity:1" />
+                            <stop offset="25%" style="stop-color:#bae6fd;stop-opacity:1" />
+                            <stop offset="50%" style="stop-color:#60a5fa;stop-opacity:1" />
+                            <stop offset="75%" style="stop-color:#3b82f6;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#1e40af;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <rect width="180" height="20" fill="url(#legend-gradient)" rx="4" />
+                </svg>
+                <span>High Activity</span>
+            </div>
+        </div>
+        
+        <div class="visualization-container">
+            <div id="heatmap-container">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading visualization...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="tooltip"></div>
+    
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title"></h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="view-toggle">
+                <button id="list-view-btn" class="view-btn active">List View</button>
+                <button id="cloud-view-btn" class="view-btn">Word Cloud</button>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+            <div id="word-cloud" class="word-cloud-container" style="display: none;"></div>
+        </div>
+    </div>
+    
+    <script>
+        // Load data and initialize visualization
+        let globalData = null;
+        let currentData = null;
+        
+        fetch('revai_data.json')
+            .then(response => response.json())
+            .then(data => {
+                globalData = data;
+                currentData = data;
+                initializeFilters(data);
+                updateStats(data);
+                createHeatmap(data);
+            })
+            .catch(error => {
+                console.error('Error loading data:', error);
+                document.getElementById('heatmap-container').innerHTML = 
+                    '<div class="error">Error: Could not load data. Please ensure revai_data.json is in the same directory.</div>';
+            });
+        
+        function initializeFilters(data) {
+            // Populate region filter
+            const regions = [...new Set(data.allEntries.map(e => e.region).filter(r => r))];
+            const regionSelect = document.getElementById('region-filter');
+            regions.sort().forEach(region => {
+                const option = document.createElement('option');
+                option.value = region;
+                option.textContent = region;
+                regionSelect.appendChild(option);
+            });
+            
+            // Add event listeners
+            document.getElementById('region-filter').addEventListener('change', applyFilters);
+            document.getElementById('date-filter').addEventListener('change', applyFilters);
+            document.getElementById('reset-filters').addEventListener('click', resetFilters);
+        }
+        
+        function applyFilters() {
+            const regionFilter = document.getElementById('region-filter').value;
+            const dateFilter = parseInt(document.getElementById('date-filter').value);
+            
+            let filteredEntries = globalData.allEntries;
+            
+            // Apply region filter
+            if (regionFilter !== 'all') {
+                filteredEntries = filteredEntries.filter(e => e.region === regionFilter);
+            }
+            
+            // Apply date filter
+            if (!isNaN(dateFilter)) {
+                const cutoffDate = new Date();
+                cutoffDate.setDate(cutoffDate.getDate() - dateFilter);
+                filteredEntries = filteredEntries.filter(e => {
+                    const entryDate = new Date(e.updatedAt);
+                    return entryDate >= cutoffDate;
+                });
+            }
+            
+            // Rebuild heatmap data
+            const newHeatmapData = {};
+            const newRoleCounts = {};
+            const newSolutionCounts = {};
+            
+            filteredEntries.forEach(entry => {
+                entry.roles.forEach(role => {
+                    if (!newHeatmapData[role]) newHeatmapData[role] = {};
+                    if (!newHeatmapData[role][entry.solutionType]) {
+                        newHeatmapData[role][entry.solutionType] = 0;
+                    }
+                    newHeatmapData[role][entry.solutionType]++;
+                    newRoleCounts[role] = (newRoleCounts[role] || 0) + 1;
+                });
+                newSolutionCounts[entry.solutionType] = (newSolutionCounts[entry.solutionType] || 0) + 1;
+            });
+            
+            // Get updated unique roles and solution types
+            const activeRoles = Object.keys(newRoleCounts).sort();
+            const activeSolutionTypes = Object.keys(newSolutionCounts).sort();
+            
+            currentData = {
+                ...globalData,
+                heatmapData: newHeatmapData,
+                roleCounts: newRoleCounts,
+                solutionCounts: newSolutionCounts,
+                totalEntries: filteredEntries.length,
+                allEntries: filteredEntries,
+                roles: activeRoles.length > 0 ? activeRoles : globalData.roles,
+                solutionTypes: activeSolutionTypes.length > 0 ? activeSolutionTypes : globalData.solutionTypes
+            };
+            
+            updateStats(currentData);
+            createHeatmap(currentData);
+        }
+        
+        function resetFilters() {
+            document.getElementById('region-filter').value = 'all';
+            document.getElementById('date-filter').value = 'all';
+            currentData = globalData;
+            updateStats(globalData);
+            createHeatmap(globalData);
+        }
+        
+        function updateStats(data) {
+            const statsContainer = document.getElementById('stats-container');
+            const activeRoles = Object.keys(data.roleCounts || data.heatmapData).length;
+            
+            statsContainer.innerHTML = `
+                <div class="stat-card">
+                    <p class="stat-number">${data.totalEntries}</p>
+                    <p class="stat-label">Total Solutions</p>
+                </div>
+                <div class="stat-card">
+                    <p class="stat-number">${data.roles.length}</p>
+                    <p class="stat-label">Unique Roles</p>
+                </div>
+                <div class="stat-card">
+                    <p class="stat-number">${data.solutionTypes.length}</p>
+                    <p class="stat-label">Solution Types</p>
+                </div>
+                <div class="stat-card">
+                    <p class="stat-number">${activeRoles}</p>
+                    <p class="stat-label">Active Roles</p>
+                </div>
+            `;
+        }
+        
+        function createHeatmap(data) {
+            // Clear existing heatmap
+            d3.select("#heatmap-container").selectAll("*").remove();
+            
+            // Create mapped solution types
+            const mappedSolutionTypes = data.solutionTypes.map(type => 
+                solutionTypeMap[type] || type
+            );
+            
+            // Dynamically adjust cell size based on viewport
+            const viewportWidth = window.innerWidth;
+            let cellSize = viewportWidth < 768 ? 50 : 70;
+            const margin = {
+                top: viewportWidth < 768 ? 80 : 100, 
+                right: 20, 
+                bottom: 30, 
+                left: viewportWidth < 768 ? 130 : 180
+            };
+            
+            const width = mappedSolutionTypes.length * cellSize + margin.left + margin.right;
+            const height = data.roles.length * cellSize + margin.top + margin.bottom;
+            
+            // Create SVG
+            const svg = d3.select("#heatmap-container")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .attr("viewBox", `0 0 ${width} ${height}`)
+                .attr("preserveAspectRatio", "xMidYMid meet");
+            
+            const g = svg.append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+            
+            // Create scales
+            const xScale = d3.scaleBand()
+                .domain(data.solutionTypes)
+                .range([0, mappedSolutionTypes.length * cellSize])
+                .padding(0.05);
+            
+            const yScale = d3.scaleBand()
+                .domain(data.roles)
+                .range([0, data.roles.length * cellSize])
+                .padding(0.05);
+            
+            // Find max value for color scale
+            let maxValue = 0;
+            Object.values(data.heatmapData).forEach(solutionTypes => {
+                Object.values(solutionTypes).forEach(value => {
+                    maxValue = Math.max(maxValue, value);
+                });
+            });
+            
+            // Color scale with better gradients
+            const colorScale = d3.scaleSequential()
+                .domain([0, maxValue])
+                .interpolator(t => d3.interpolateBlues(t * 0.9 + 0.1)); // Avoid pure white
+            
+            // Create cells
+            data.roles.forEach((role, i) => {
+                data.solutionTypes.forEach((solutionType, j) => {
+                    const value = (data.heatmapData[role] && data.heatmapData[role][solutionType]) || 0;
+                    
+                    const cell = g.append("rect")
+                        .attr("x", xScale(solutionType))
+                        .attr("y", yScale(role))
+                        .attr("width", xScale.bandwidth())
+                        .attr("height", yScale.bandwidth())
+                        .attr("class", "cell")
+                        .style("fill", value === 0 ? "#f9fafb" : colorScale(value))
+                        .on("mouseover", function(event) {
+                            showTooltip(event, role, solutionType, value);
+                        })
+                        .on("mouseout", hideTooltip)
+                        .on("click", function() {
+                            showDetails(role, solutionType, data);
+                        });
+                    
+                    // Add text label for non-zero values
+                    if (value > 0) {
+                        g.append("text")
+                            .attr("x", xScale(solutionType) + xScale.bandwidth() / 2)
+                            .attr("y", yScale(role) + yScale.bandwidth() / 2)
+                            .attr("text-anchor", "middle")
+                            .attr("dominant-baseline", "middle")
+                            .attr("class", "cell-value")
+                            .style("fill", value > maxValue * 0.5 ? "white" : "#1f2937")
+                            .style("pointer-events", "none")
+                            .text(value);
+                    }
+                });
+            });
+            
+            // Add x-axis labels
+            g.selectAll(".x-axis-label")
+                .data(data.solutionTypes)
+                .enter()
+                .append("text")
+                .attr("class", "x-axis-label axis-label")
+                .attr("x", d => xScale(d) + xScale.bandwidth() / 2)
+                .attr("y", -10)
+                .attr("transform", d => `rotate(-45, ${xScale(d) + xScale.bandwidth() / 2}, -10)`)
+                .style("text-anchor", "end")
+                .text(d => solutionTypeMap[d] || d);
+            
+            // Add y-axis labels with proper truncation for long labels
+            g.selectAll(".y-axis-label")
+                .data(data.roles)
+                .enter()
+                .append("text")
+                .attr("class", "y-axis-label axis-label")
+                .attr("x", -15)
+                .attr("y", d => yScale(d) + yScale.bandwidth() / 2)
+                .attr("dominant-baseline", "middle")
+                .text(d => {
+                    // Truncate very long labels
+                    return d.length > 20 ? d.substring(0, 17) + '...' : d;
+                })
+                .append("title")
+                .text(d => d); // Full text in tooltip
+        }
+        
+        // Define solutionTypeMap globally
+        const solutionTypeMap = {
+            'Application': 'App',
+            'Workflow': 'Gumloop',
+            'NotebookLM': 'NotebookLM',
+            'Other': 'Other',
+            'Prompt': 'Prompt',
+            'Shared Librechat Agent': 'LibreChat',
+            'Gumloop Workflow': 'Gumloop',
+            'Shared LibreChat Agent': 'LibreChat'
+        };
+        
+        function showTooltip(event, role, solutionType, value) {
+            const tooltip = d3.select(".tooltip");
+            const percentage = ((value / currentData.totalEntries) * 100).toFixed(1);
+            const displayName = solutionTypeMap[solutionType] || solutionType;
+            
+            tooltip.html(`
+                <strong>${role}</strong><br/>
+                <strong>${displayName}</strong><br/>
+                Solutions: ${value}<br/>
+                ${percentage}% of total
+            `)
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - 28) + "px")
+            .style("opacity", 1);
+        }
+        
+        function hideTooltip() {
+            d3.select(".tooltip").style("opacity", 0);
+        }
+        
+        function showDetails(role, solutionType, data) {
+            const modal = document.getElementById("modal");
+            const modalTitle = document.getElementById("modal-title");
+            const modalBody = document.getElementById("modal-body");
+            
+            // Filter entries for this cell
+            const relevantEntries = data.allEntries.filter(entry => 
+                entry.roles.includes(role) && entry.solutionType === solutionType
+            );
+            
+            const displayName = solutionTypeMap[solutionType] || solutionType;
+            modalTitle.textContent = `${role} - ${displayName} (${relevantEntries.length} solutions)`;
+            
+            // Sort entries by date in reverse chronological order (most recent first)
+            relevantEntries.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+            
+            // Build modal content
+            let content = '';
+            relevantEntries.forEach(entry => {
+                const date = new Date(entry.updatedAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                
+                content += `
+                    <div class="solution-item">
+                        <div class="solution-title">${entry.title || 'Untitled'}</div>
+                        <div class="solution-meta">
+                            <span>👤 ${entry.author}</span>
+                            <span>🌍 ${entry.region || 'Unknown Region'}</span>
+                            <span>📅 ${date}</span>
+                        </div>
+                        <div class="solution-description">
+                            ${entry.description ? entry.description.substring(0, 300) + (entry.description.length > 300 ? '...' : '') : 'No description available'}
+                        </div>
+                        <div class="solution-links">
+                            ${entry.slackUrl && entry.slackUrl !== 'none' ? 
+                                `<a href="${entry.slackUrl}" target="_blank">View in Slack</a>` : ''}
+                            ${entry.videoUrl && entry.videoUrl !== 'none' ? 
+                                `<a href="${entry.videoUrl}" target="_blank">Watch Video</a>` : ''}
+                            ${entry.appUrl && entry.appUrl !== 'none' ? 
+                                `<a href="${entry.appUrl}" target="_blank">View App</a>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            modalBody.innerHTML = content;
+            modal.style.display = "block";
+            document.body.style.overflow = 'hidden';
+            
+            // Store current entries for word cloud
+            modal.currentEntries = relevantEntries;
+            
+            // Setup view toggle event listeners
+            setupViewToggle(relevantEntries);
+        }
+        
+        // Modal close functionality
+        document.querySelector(".close").onclick = function() {
+            document.getElementById("modal").style.display = "none";
+            document.body.style.overflow = 'auto';
+        }
+        
+        window.onclick = function(event) {
+            const modal = document.getElementById("modal");
+            if (event.target == modal) {
+                modal.style.display = "none";
+                document.body.style.overflow = 'auto';
+            }
+        }
+        
+        // Setup view toggle for list/word cloud
+        function setupViewToggle(entries) {
+            const listBtn = document.getElementById('list-view-btn');
+            const cloudBtn = document.getElementById('cloud-view-btn');
+            const modalBody = document.getElementById('modal-body');
+            const wordCloud = document.getElementById('word-cloud');
+            
+            listBtn.onclick = function() {
+                listBtn.classList.add('active');
+                cloudBtn.classList.remove('active');
+                modalBody.style.display = 'block';
+                wordCloud.style.display = 'none';
+            };
+            
+            cloudBtn.onclick = function() {
+                cloudBtn.classList.add('active');
+                listBtn.classList.remove('active');
+                modalBody.style.display = 'none';
+                wordCloud.style.display = 'block';
+                generateWordCloud(entries);
+            };
+            
+            // Reset to list view when modal opens
+            listBtn.click();
+        }
+        
+        // Generate word cloud from titles
+        function generateWordCloud(entries) {
+            const stopWords = new Set([
+                'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
+                'of', 'with', 'by', 'from', 'up', 'about', 'into', 'through', 'during',
+                'before', 'after', 'above', 'below', 'between', 'under', 'again',
+                'further', 'then', 'once', 'is', 'am', 'are', 'was', 'were', 'be',
+                'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could',
+                'should', 'may', 'might', 'must', 'can', 'this', 'that', 'these',
+                'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'them', 'their',
+                'what', 'which', 'who', 'when', 'where', 'why', 'how', 'all', 'each',
+                'every', 'some', 'few', 'more', 'most', 'other', 'such', 'only', 'own',
+                'same', 'so', 'than', 'too', 'very', 'just', 'now'
+            ]);
+            
+            // Extract and count words from titles
+            const wordCounts = {};
+            entries.forEach(entry => {
+                if (entry.title) {
+                    // Split by non-word characters and filter
+                    const words = entry.title.toLowerCase()
+                        .split(/[^a-z0-9]+/)
+                        .filter(word => word.length > 2 && !stopWords.has(word));
+                    
+                    words.forEach(word => {
+                        wordCounts[word] = (wordCounts[word] || 0) + 1;
+                    });
+                }
+            });
+            
+            // Convert to array and sort by frequency
+            const wordArray = Object.entries(wordCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 50); // Top 50 words
+            
+            // Clear and generate cloud
+            const cloudContainer = document.getElementById('word-cloud');
+            cloudContainer.innerHTML = '';
+            
+            if (wordArray.length === 0) {
+                cloudContainer.innerHTML = '<p style="color: #6b7280; padding: 40px;">No word data available</p>';
+                return;
+            }
+            
+            // Calculate font sizes
+            const maxCount = wordArray[0][1];
+            const minCount = wordArray[wordArray.length - 1][1];
+            const sizeScale = d3.scaleLinear()
+                .domain([minCount, maxCount])
+                .range([14, 48]);
+            
+            // Create word elements
+            wordArray.forEach(([word, count]) => {
+                const span = document.createElement('span');
+                span.className = 'word-cloud-word';
+                span.textContent = word;
+                span.style.fontSize = `${sizeScale(count)}px`;
+                span.style.color = d3.interpolateBlues(count / maxCount);
+                span.title = `${word}: ${count} occurrence${count > 1 ? 's' : ''}`;
+                
+                // Add click handler to filter
+                span.onclick = function() {
+                    filterByWord(word, entries);
+                };
+                
+                cloudContainer.appendChild(span);
+            });
+        }
+        
+        // Filter solutions by clicked word
+        function filterByWord(word, allEntries) {
+            const modalBody = document.getElementById('modal-body');
+            const listBtn = document.getElementById('list-view-btn');
+            
+            // Filter entries that contain the word in title
+            const filteredEntries = allEntries.filter(entry => 
+                entry.title && entry.title.toLowerCase().includes(word.toLowerCase())
+            );
+            
+            // Switch to list view and show filtered results
+            listBtn.click();
+            
+            // Rebuild the list with filtered entries
+            let content = `<div style="padding: 10px 20px; background-color: #f3f4f6; margin-bottom: 10px; border-radius: 4px;">
+                            Filtered by word: <strong>${word}</strong> (${filteredEntries.length} results)
+                            <button onclick="resetFilter()" style="margin-left: 10px; padding: 4px 8px; background: white; border: 1px solid #e5e7eb; border-radius: 4px; cursor: pointer;">Clear Filter</button>
+                          </div>`;
+            
+            filteredEntries.forEach(entry => {
+                const date = new Date(entry.updatedAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                
+                content += `
+                    <div class="solution-item">
+                        <div class="solution-title">${highlightWord(entry.title || 'Untitled', word)}</div>
+                        <div class="solution-meta">
+                            <span>👤 ${entry.author}</span>
+                            <span>🌍 ${entry.region || 'Unknown Region'}</span>
+                            <span>📅 ${date}</span>
+                        </div>
+                        <div class="solution-description">
+                            ${entry.description ? entry.description.substring(0, 300) + (entry.description.length > 300 ? '...' : '') : 'No description available'}
+                        </div>
+                        <div class="solution-links">
+                            ${entry.slackUrl && entry.slackUrl !== 'none' ? 
+                                `<a href="${entry.slackUrl}" target="_blank">View in Slack</a>` : ''}
+                            ${entry.videoUrl && entry.videoUrl !== 'none' ? 
+                                `<a href="${entry.videoUrl}" target="_blank">Watch Video</a>` : ''}
+                            ${entry.appUrl && entry.appUrl !== 'none' ? 
+                                `<a href="${entry.appUrl}" target="_blank">View App</a>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            modalBody.innerHTML = content;
+        }
+        
+        // Highlight word in title
+        function highlightWord(title, word) {
+            const regex = new RegExp(`(${word})`, 'gi');
+            return title.replace(regex, '<span style="background-color: #fbbf24; padding: 0 2px; border-radius: 2px;">$1</span>');
+        }
+        
+        // Reset filter to show all entries
+        function resetFilter() {
+            const modal = document.getElementById("modal");
+            const entries = modal.currentEntries;
+            const modalBody = document.getElementById('modal-body');
+            
+            // Rebuild the original list
+            let content = '';
+            entries.forEach(entry => {
+                const date = new Date(entry.updatedAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                
+                content += `
+                    <div class="solution-item">
+                        <div class="solution-title">${entry.title || 'Untitled'}</div>
+                        <div class="solution-meta">
+                            <span>👤 ${entry.author}</span>
+                            <span>🌍 ${entry.region || 'Unknown Region'}</span>
+                            <span>📅 ${date}</span>
+                        </div>
+                        <div class="solution-description">
+                            ${entry.description ? entry.description.substring(0, 300) + (entry.description.length > 300 ? '...' : '') : 'No description available'}
+                        </div>
+                        <div class="solution-links">
+                            ${entry.slackUrl && entry.slackUrl !== 'none' ? 
+                                `<a href="${entry.slackUrl}" target="_blank">View in Slack</a>` : ''}
+                            ${entry.videoUrl && entry.videoUrl !== 'none' ? 
+                                `<a href="${entry.videoUrl}" target="_blank">Watch Video</a>` : ''}
+                            ${entry.appUrl && entry.appUrl !== 'none' ? 
+                                `<a href="${entry.appUrl}" target="_blank">View App</a>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            modalBody.innerHTML = content;
+        }
+        
+        // Responsive handling
+        window.addEventListener('resize', () => {
+            if (currentData) {
+                createHeatmap(currentData);
+            }
+        });
+    </script>
+</body>
+</html> 
+</html> 
