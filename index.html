@@ -744,6 +744,59 @@
             margin: 1rem 0;
             font-size: 0.9rem;
         }
+        
+        .experimental-toggle {
+            background: rgba(147, 51, 234, 0.2);
+            border: 1px solid rgb(147, 51, 234);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 auto;
+            display: block;
+        }
+        
+        .experimental-toggle:hover {
+            background: rgba(147, 51, 234, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
+        }
+        
+        .experimental-toggle.active {
+            background: rgba(147, 51, 234, 0.6);
+            box-shadow: 0 0 20px rgba(147, 51, 234, 0.5);
+        }
+        
+        .jobs-legend {
+            display: none;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .jobs-legend h3 {
+            color: white;
+            margin: 0 0 0.5rem 0;
+            font-size: 1rem;
+        }
+        
+        .job-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+        }
+        
+        .job-item {
+            padding: 0.25rem 0.75rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            color: rgba(255, 255, 255, 0.8);
+        }
     </style>
 </head>
 <body>
@@ -751,6 +804,11 @@
         <div class="header">
             <h1>Revenue AI Use Cases Heatmap</h1>
             <div class="subtitle">Interactive visualization of AI solutions built across roles and solution types</div>
+            <div style="margin-top: 1rem;">
+                <button id="experimentalToggle" class="experimental-toggle" onclick="toggleExperimentalView()">
+                    🧪 Experimental: Jobs View
+                </button>
+            </div>
         </div>
         
         <div class="stats" id="stats-container">
@@ -778,7 +836,7 @@
             </div>
         </div>
         
-        <div class="legend">
+        <div class="legend" id="defaultLegend">
             <div class="legend-item">
                 <span>Low Activity</span>
                 <svg width="180" height="20">
@@ -794,6 +852,13 @@
                     <rect width="180" height="20" fill="url(#legend-gradient)" rx="4" />
                 </svg>
                 <span>High Activity</span>
+            </div>
+        </div>
+        
+        <div class="jobs-legend" id="jobsLegend">
+            <h3>Jobs to be Done Categories:</h3>
+            <div class="job-items" id="jobCategories">
+                <!-- Will be populated by JavaScript -->
             </div>
         </div>
         
@@ -882,11 +947,17 @@
         let currentListFilters = new Set();
         let lastTappedCell = null;
         let tapTimeout = null;
+        let jobsData = null;
+        let isExperimentalView = false;
         
         // Use absolute URL to ensure it works on GitHub Pages
         const dataUrl = window.location.hostname === 'pomajp.github.io' 
             ? 'https://pomajp.github.io/revai-heatmap/revai-data.json'
             : 'revai-data.json';
+            
+        const jobsDataUrl = window.location.hostname === 'pomajp.github.io' 
+            ? 'https://pomajp.github.io/revai-heatmap/revai-jobs-data.json'
+            : 'revai-jobs-data.json';
         
         console.log('Hostname:', window.location.hostname);
         console.log('Loading data from:', dataUrl);
@@ -905,6 +976,14 @@
                 initializeFilters(data);
                 updateStats(data);
                 createHeatmap(data);
+                
+                // Load jobs data for experimental view
+                return fetch(jobsDataUrl);
+            })
+            .then(response => response.json())
+            .then(data => {
+                jobsData = data;
+                console.log('Jobs data loaded:', data);
             })
             .catch(error => {
                 console.error('Error loading data:', error);
@@ -1489,6 +1568,228 @@
             }
         });
 
+        // Toggle experimental view
+        function toggleExperimentalView() {
+            isExperimentalView = !isExperimentalView;
+            const toggle = document.getElementById('experimentalToggle');
+            const defaultLegend = document.getElementById('defaultLegend');
+            const jobsLegend = document.getElementById('jobsLegend');
+            
+            if (isExperimentalView) {
+                toggle.classList.add('active');
+                toggle.textContent = '🔬 Back to Standard View';
+                defaultLegend.style.display = 'none';
+                jobsLegend.style.display = 'block';
+                
+                // Update stats for jobs view
+                updateStatsForJobs();
+                
+                // Create jobs heatmap
+                if (jobsData) {
+                    createJobsHeatmap(jobsData);
+                }
+            } else {
+                toggle.classList.remove('active');
+                toggle.textContent = '🧪 Experimental: Jobs View';
+                defaultLegend.style.display = 'block';
+                jobsLegend.style.display = 'none';
+                
+                // Back to standard view
+                updateStats(currentData);
+                createHeatmap(currentData);
+            }
+        }
+        
+        // Update stats for jobs view
+        function updateStatsForJobs() {
+            if (!jobsData) return;
+            
+            const statsContainer = document.getElementById('stats-container');
+            const topJobs = Object.entries(jobsData.jobCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 4);
+            
+            statsContainer.innerHTML = `
+                <div class="stat-card" onclick="showAllSolutions()" style="cursor: pointer;">
+                    <p class="stat-number">${jobsData.totalEntries}</p>
+                    <p class="stat-label">Total Solutions</p>
+                </div>
+                ${topJobs.map(([job, count]) => `
+                    <div class="stat-card" onclick="showJobDetail('${job}')" style="cursor: pointer;">
+                        <p class="stat-number">${count}</p>
+                        <p class="stat-label" style="font-size: 0.8rem;">${job.split(' ').slice(0, 2).join(' ')}</p>
+                    </div>
+                `).join('')}
+            `;
+            
+            // Populate job categories legend
+            const jobCategories = document.getElementById('jobCategories');
+            jobCategories.innerHTML = Object.keys(jobsData.jobCounts)
+                .map(job => `<div class="job-item">${job}</div>`)
+                .join('');
+        }
+        
+        // Create jobs-based heatmap
+        function createJobsHeatmap(data) {
+            // Clear existing heatmap
+            d3.select("#heatmap-container").selectAll("*").remove();
+            
+            const container = document.getElementById("heatmap-container");
+            const width = container.clientWidth;
+            const margin = { top: 150, right: 50, bottom: 120, left: 200 };
+            const height = Math.max(400, data.jobs.length * 30) + margin.top + margin.bottom;
+            
+            // Create SVG
+            const svg = d3.select("#heatmap-container")
+                .append("svg")
+                .attr("width", width)
+                .attr("height", height);
+            
+            const g = svg.append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+            
+            // Calculate dimensions
+            const xScale = d3.scaleBand()
+                .domain(data.roles)
+                .range([0, width - margin.left - margin.right])
+                .padding(0.05);
+            
+            const yScale = d3.scaleBand()
+                .domain(data.jobs)
+                .range([0, data.jobs.length * 30])
+                .padding(0.05);
+            
+            // Color scale - purple theme for experimental
+            const maxValue = Math.max(...Object.values(data.matrix).flatMap(row => Object.values(row)));
+            const colorScale = d3.scaleSequential()
+                .domain([0, maxValue])
+                .interpolator(d3.interpolatePurples);
+            
+            // Draw cells
+            data.jobs.forEach(job => {
+                data.roles.forEach(role => {
+                    const value = data.matrix[job]?.[role] || 0;
+                    if (value > 0) {
+                        g.append("rect")
+                            .attr("x", xScale(role))
+                            .attr("y", yScale(job))
+                            .attr("width", xScale.bandwidth())
+                            .attr("height", yScale.bandwidth())
+                            .attr("fill", colorScale(value))
+                            .attr("stroke", "white")
+                            .attr("stroke-width", 1)
+                            .attr("rx", 4)
+                            .attr("class", "heatmap-cell")
+                            .on("click", function(event) {
+                                showJobRoleDetails(job, role);
+                            })
+                            .on("mouseover", function(event) {
+                                tooltip.style("visibility", "visible")
+                                    .html(`<strong>${job}</strong><br>${role}<br>Solutions: ${value}`);
+                                d3.select(this).attr("stroke-width", 3);
+                            })
+                            .on("mousemove", function(event) {
+                                tooltip.style("top", (event.pageY - 10) + "px")
+                                    .style("left", (event.pageX + 10) + "px");
+                            })
+                            .on("mouseout", function() {
+                                tooltip.style("visibility", "hidden");
+                                d3.select(this).attr("stroke-width", 1);
+                            });
+                    }
+                });
+            });
+            
+            // X axis
+            g.append("g")
+                .attr("transform", `translate(0, -10)`)
+                .selectAll("text")
+                .data(data.roles)
+                .enter().append("text")
+                .attr("x", d => xScale(d) + xScale.bandwidth() / 2)
+                .attr("y", 0)
+                .attr("text-anchor", "end")
+                .attr("transform", d => `rotate(-45, ${xScale(d) + xScale.bandwidth() / 2}, 0)`)
+                .style("font-size", "12px")
+                .style("fill", "white")
+                .text(d => d);
+            
+            // Y axis
+            g.append("g")
+                .selectAll("text")
+                .data(data.jobs)
+                .enter().append("text")
+                .attr("x", -10)
+                .attr("y", d => yScale(d) + yScale.bandwidth() / 2)
+                .attr("text-anchor", "end")
+                .attr("alignment-baseline", "middle")
+                .style("font-size", "12px")
+                .style("fill", "white")
+                .text(d => d);
+        }
+        
+        // Show details for job-role combination
+        function showJobRoleDetails(job, role) {
+            const filteredData = csvData.filter(item => {
+                const itemRoles = item.roles.split(';').map(r => r.trim());
+                return itemRoles.includes(role);
+            }).filter(item => {
+                // Filter by job category
+                const title = item.title.toLowerCase();
+                const desc = item.description.toLowerCase();
+                const combined = title + ' ' + desc;
+                
+                // Match job patterns (simplified for display)
+                const jobPatterns = {
+                    'Account Intelligence & Research': ['research', 'analyze', 'competitive', 'insight'],
+                    'Content Generation & Localization': ['create', 'generate', 'translate', 'video'],
+                    'Sales Process Optimization': ['sales', 'account plan', 'pipeline', 'deal'],
+                    'Data Analysis & Reporting': ['data', 'report', 'metric', 'dashboard'],
+                    'Workflow Automation': ['automate', 'scale', 'efficient', 'integrate'],
+                    'Knowledge Centralization': ['centralize', 'organize', 'notebook', 'knowledge'],
+                    'Partner & Collaboration': ['partner', 'agency', 'collaboration'],
+                    'Learning & Training': ['learn', 'train', 'educate', 'enablement'],
+                    'Communication & Outreach': ['communicate', 'outreach', 'email', 'messaging'],
+                    'Product & Demo Creation': ['demo', 'mockup', 'prototype', 'build']
+                };
+                
+                const keywords = jobPatterns[job] || [];
+                return keywords.some(keyword => combined.includes(keyword));
+            });
+            
+            showModal(`${job} - ${role}`, filteredData);
+        }
+        
+        // Show job detail view
+        function showJobDetail(job) {
+            currentView = 'job';
+            currentListFilters.clear();
+            const filteredData = csvData.filter(item => {
+                const title = item.title.toLowerCase();
+                const desc = item.description.toLowerCase();
+                const combined = title + ' ' + desc;
+                
+                // Match job patterns
+                const jobPatterns = {
+                    'Account Intelligence & Research': ['research', 'analyze', 'competitive', 'insight'],
+                    'Content Generation & Localization': ['create', 'generate', 'translate', 'video'],
+                    'Sales Process Optimization': ['sales', 'account plan', 'pipeline', 'deal'],
+                    'Data Analysis & Reporting': ['data', 'report', 'metric', 'dashboard'],
+                    'Workflow Automation': ['automate', 'scale', 'efficient', 'integrate'],
+                    'Knowledge Centralization': ['centralize', 'organize', 'notebook', 'knowledge'],
+                    'Partner & Collaboration': ['partner', 'agency', 'collaboration'],
+                    'Learning & Training': ['learn', 'train', 'educate', 'enablement'],
+                    'Communication & Outreach': ['communicate', 'outreach', 'email', 'messaging'],
+                    'Product & Demo Creation': ['demo', 'mockup', 'prototype', 'build']
+                };
+                
+                const keywords = jobPatterns[job] || [];
+                return keywords.some(keyword => combined.includes(keyword));
+            });
+            
+            showModal(`Job: ${job}`, filteredData);
+        }
+        
         // List view functions
         function showAllSolutions() {
             currentView = 'all';
