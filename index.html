@@ -591,7 +591,12 @@
         let currentData = null;
         
         fetch('revai-data.json')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 globalData = data;
                 currentData = data;
@@ -601,8 +606,21 @@
             })
             .catch(error => {
                 console.error('Error loading data:', error);
-                document.getElementById('heatmap-container').innerHTML = 
-                    '<div class="error">Error: Could not load data. Please ensure revai-data.json is in the same directory.</div>';
+                // Try with absolute URL as fallback
+                fetch('https://pomajp.github.io/revai-heatmap/revai-data.json')
+                    .then(response => response.json())
+                    .then(data => {
+                        globalData = data;
+                        currentData = data;
+                        initializeFilters(data);
+                        updateStats(data);
+                        createHeatmap(data);
+                    })
+                    .catch(fallbackError => {
+                        console.error('Fallback also failed:', fallbackError);
+                        document.getElementById('heatmap-container').innerHTML = 
+                            '<div class="error">Error: Could not load data. Please try refreshing the page.</div>';
+                    });
             });
         
         function initializeFilters(data) {
