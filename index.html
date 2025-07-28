@@ -420,7 +420,7 @@
         /* Mobile Responsiveness */
         @media (max-width: 768px) {
             body {
-                overflow-x: hidden;
+                overflow-x: auto;
             }
             
             .container {
@@ -472,11 +472,13 @@
             
             .visualization-container {
                 padding: 15px 5px;
-                overflow-x: hidden;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
             }
             
             #heatmap-container {
-                overflow-x: hidden;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
             }
             
             .modal-content {
@@ -880,10 +882,10 @@
         const taskNameMap = {
             'Content Generation & Localization': 'Content Gen',
             'Account Intelligence & Research': 'Intel/Research',
-            'Sales Process Optimization': 'Process Optimization',
-            'Product & Demo Creation': 'Prod/Demo Creation',
-            'Knowledge Centralization': 'Knowledge Mgmt',
-            'Data Analysis & Reporting': 'Data/Reporting',
+            'Sales Process Optimization': 'Process Opt',
+            'Product & Demo Creation': 'Prod/Demo',
+            'Knowledge Centralization': 'Knowledge',
+            'Data Analysis & Reporting': 'Data/Report',
             'Workflow Automation': 'Automation',
             'Communication & Outreach': 'Outreach',
             'Learning & Training': 'Learning',
@@ -1079,11 +1081,11 @@
             if (viewportWidth < 768) {
                 // Mobile
                 cellSize = 40;
-                margin = { top: 120, right: 40, bottom: 150, left: 180 };
+                margin = { top: 120, right: 20, bottom: 150, left: 90 };
             } else {
                 // Desktop
                 cellSize = 60;
-                margin = { top: 150, right: 40, bottom: 150, left: 220 };
+                margin = { top: 150, right: 20, bottom: 150, left: 120 };
             }
             
             const width = Math.max(containerWidth, data.roles.length * cellSize + margin.left + margin.right);
@@ -1251,7 +1253,8 @@
                 });
                 
             // Add axis titles
-            // Y-axis title (Types)
+            // Y-axis title (Types) - Removed to save space
+            /*
             svg.append("text")
                 .attr("class", "axis-title")
                 .attr("transform", "rotate(-90)")
@@ -1262,8 +1265,10 @@
                 .style("font-size", "14px")
                 .style("font-weight", "bold")
                 .text("Solution Types");
+            */
                 
-            // X-axis title (Roles)
+            // X-axis title (Roles) - Removed to save space
+            /*
             svg.append("text")
                 .attr("class", "axis-title")
                 .attr("x", margin.left + (data.roles.length * cellSize) / 2)
@@ -1273,6 +1278,7 @@
                 .style("font-size", "14px")
                 .style("font-weight", "bold")
                 .text("Roles");
+            */
                 
             // Debug logging for Type view
             console.log('=== Type View Heatmap Debug ===');
@@ -1696,9 +1702,9 @@
             let cellSize = isMobile ? 40 : 60;
             const margin = { 
                 top: isMobile ? 120 : 150, 
-                right: 40, 
+                right: 20, 
                 bottom: isMobile ? 120 : 150, 
-                left: isMobile ? 180 : 220 
+                left: isMobile ? 90 : 120 
             };
             
             const width = Math.max(containerWidth, data.roles.length * cellSize + margin.left + margin.right);
@@ -1840,7 +1846,8 @@
                 });
                 
             // Add axis titles
-            // Y-axis title (Tasks)
+            // Y-axis title (Tasks) - Removed to save space
+            /*
             svg.append("text")
                 .attr("class", "axis-title")
                 .attr("transform", "rotate(-90)")
@@ -1851,8 +1858,10 @@
                 .style("font-size", "14px")
                 .style("font-weight", "bold")
                 .text("Tasks");
+            */
                 
-            // X-axis title (Roles)
+            // X-axis title (Roles) - Removed to save space
+            /*
             svg.append("text")
                 .attr("class", "axis-title")
                 .attr("x", margin.left + (data.roles.length * cellSize) / 2)
@@ -1862,6 +1871,7 @@
                 .style("font-size", "14px")
                 .style("font-weight", "bold")
                 .text("Roles");
+            */
                 
             // Debug logging for matrix
             console.log('=== Tasks Heatmap Debug ===');
