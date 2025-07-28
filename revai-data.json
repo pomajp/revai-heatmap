@@ -7,7 +7,6 @@
     "Partnerships",
     "ProServe (not in list, so excluded)",
     "SDR",
-    "Sales Development Rep",
     "Solution Engineer"
   ],
   "solutionTypes": [
@@ -41,10 +40,10 @@
       "Gumloop Workflow": 1
     },
     "SDR": {
-      "Prompt": 15,
+      "Prompt": 16,
       "NotebookLM": 9,
       "Application": 21,
-      "Shared Librechat Agent": 10,
+      "Shared Librechat Agent": 11,
       "Gumloop Workflow": 4,
       "Other": 3
     },
@@ -79,10 +78,6 @@
       "Application": 18,
       "Shared Librechat Agent": 6,
       "Gumloop Workflow": 1
-    },
-    "Sales Development Rep": {
-      "Prompt": 1,
-      "Shared Librechat Agent": 1
     },
     "ProServe (not in list, so excluded)": {
       "Application": 1
@@ -267,7 +262,7 @@
       "author": "Barry Shields",
       "updatedAt": "2025-01-25T15:20:02.966669+00:00",
       "roles": [
-        "Sales Development Rep",
+        "SDR",
         "Account Executive",
         "Launch Consultant",
         "Solution Engineer",
@@ -573,7 +568,7 @@
       "author": "Andrei Dumitriu",
       "updatedAt": "2025-03-04T20:15:02.586379+00:00",
       "roles": [
-        "Sales Development Rep",
+        "SDR",
         "Account Executive",
         "Operations"
       ],
@@ -2765,5 +2760,5 @@
     }
   ],
   "totalEntries": 172,
-  "lastUpdated": "2025-07-23T17:01:30.601453"
+  "lastUpdated": "2025-07-28T11:27:12.187819"
 }

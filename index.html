@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Revenue AI Use Cases Heatmap</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
@@ -31,6 +34,7 @@
             color: white;
             padding: 25px 20px;
             text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
         h1 {
@@ -38,6 +42,7 @@
             font-size: 2em;
             font-weight: 600;
             letter-spacing: -0.5px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
         
         .subtitle {
@@ -48,29 +53,33 @@
         
         .stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
             padding: 20px;
-            background: #fafbfc;
+            background: #f8f9fa;
             border-bottom: 1px solid #e1e4e8;
+            max-height: 300px;
+            overflow-y: auto;
         }
         
         .stat-card {
             background: white;
-            padding: 15px;
+            padding: 12px;
             border-radius: 10px;
             text-align: center;
             box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            transition: transform 0.2s;
+            transition: all 0.2s;
+            border: 1px solid #e5e7eb;
         }
         
         .stat-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border-color: #667eea;
         }
         
         .stat-number {
-            font-size: 2em;
+            font-size: 1.75em;
             font-weight: 700;
             color: #667eea;
             margin: 0;
@@ -79,9 +88,12 @@
         
         .stat-label {
             color: #6b7280;
-            font-size: 0.85em;
-            margin-top: 5px;
+            font-size: 0.8em;
+            margin-top: 4px;
             font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
         
         .controls {
@@ -103,6 +115,10 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
         }
         
         .filter-group label {
@@ -119,6 +135,7 @@
             background: white;
             cursor: pointer;
             transition: all 0.2s;
+            font-weight: 500;
         }
         
         .filter-select:hover {
@@ -139,14 +156,39 @@
             border-radius: 6px;
             cursor: pointer;
             font-size: 0.85em;
-            font-weight: 500;
+            font-weight: 600;
             transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
         }
         
         #reset-filters:hover {
             background: #dc2626;
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+        
+        .color-legend {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 10px;
+            font-size: 0.85em;
+            color: #6b7280;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-gradient {
+            width: 120px;
+            height: 20px;
+            background: linear-gradient(to right, #f9fafb 0%, #dbeafe 25%, #93c5fd 50%, #3b82f6 75%, #1e40af 100%);
+            border-radius: 4px;
+            border: 1px solid #e5e7eb;
         }
         
         .visualization-container {
@@ -171,9 +213,9 @@
         
         .cell:hover {
             stroke: #4b5563;
-            stroke-width: 2px;
-            filter: brightness(0.85);
-            transform: scale(1.02);
+            stroke-width: 3px;
+            filter: brightness(0.9) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+            transform: scale(1.05);
         }
         
         .axis-label {
@@ -185,10 +227,18 @@
         .y-axis-label {
             text-anchor: end;
             font-size: 12px;
+            fill: #374151 !important;
         }
         
         .x-axis-label {
             text-anchor: middle;
+            fill: #374151 !important;
+        }
+        
+        .axis-title {
+            font-size: 14px;
+            font-weight: bold;
+            fill: #374151 !important;
         }
         
         .cell-value {
@@ -598,23 +648,24 @@
         
         .axis-label {
             font-size: 12px;
-            fill: white !important;
+            fill: #374151 !important;
             opacity: 1 !important;
             font-weight: 500;
         }
         
         /* Ensure SVG text is visible */
-        svg text {
-            fill: white;
+        svg text.cell-value {
+            /* Only apply to cell values, not axis labels */
         }
         
         .heatmap-cell {
+            cursor: pointer;
             transition: all 0.2s ease;
         }
         
         .heatmap-cell:hover {
-            stroke-width: 3 !important;
-            filter: brightness(1.1);
+            filter: brightness(0.9) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+            transform: scale(1.05);
         }
         
         .cell {
@@ -627,6 +678,100 @@
             filter: brightness(1.1);
         }
 
+        #view-toggle {
+            background-color: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        #view-toggle:hover {
+            background-color: #667eea;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+        
+        .view-toggle-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        
+        #mobile-hint {
+            display: none;
+            text-align: center;
+            padding: 10px;
+            background-color: #fef3c7;
+            color: #92400e;
+            font-size: 0.85em;
+            margin: 10px 20px;
+            border-radius: 6px;
+            border: 1px solid #fcd34d;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 2% auto;
+            padding: 0;
+            border: none;
+            width: 90%;
+            max-width: 1000px;
+            max-height: 90vh;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        #modal-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .close {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            transition: transform 0.2s;
+            cursor: pointer;
+            line-height: 1;
+        }
+        
+        .close:hover,
+        .close:focus {
+            transform: scale(1.2);
+        }
+
     </style>
 </head>
 <body>
@@ -634,7 +779,7 @@
         <div class="header">
             <h1>Revenue AI Use Cases Heatmap</h1>
             <div class="subtitle">Interactive visualization of AI solutions built by Revenue teams</div>
-            <div style="margin-top: 1rem;">
+            <div class="view-toggle-container">
                 <button id="viewToggle" class="view-toggle" onclick="toggleView()">
                     📊 Switch to Type View
                 </button>
@@ -657,31 +802,20 @@
                     <label for="date-filter">Time Period:</label>
                     <select id="date-filter" class="filter-select">
                         <option value="all">All Time</option>
+                        <option value="7">Last 7 days</option>
                         <option value="30">Last 30 days</option>
-                        <option value="60">Last 60 days</option>
                         <option value="90">Last 90 days</option>
                     </select>
                 </div>
                 <button id="reset-filters">Reset Filters</button>
             </div>
-        </div>
-        
-        <div class="legend">
-            <div class="legend-item">
-                <span>Low Activity</span>
-                <svg width="180" height="20">
-                    <defs>
-                        <linearGradient id="legend-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" style="stop-color:#f0f9ff;stop-opacity:1" />
-                            <stop offset="25%" style="stop-color:#bae6fd;stop-opacity:1" />
-                            <stop offset="50%" style="stop-color:#60a5fa;stop-opacity:1" />
-                            <stop offset="75%" style="stop-color:#3b82f6;stop-opacity:1" />
-                            <stop offset="100%" style="stop-color:#1e40af;stop-opacity:1" />
-                        </linearGradient>
-                    </defs>
-                    <rect width="180" height="20" fill="url(#legend-gradient)" rx="4" />
-                </svg>
-                <span>High Activity</span>
+            
+            <div class="color-legend">
+                <div class="legend-item">
+                    <span>Low Activity</span>
+                    <div class="legend-gradient"></div>
+                    <span>High Activity</span>
+                </div>
             </div>
         </div>
         
@@ -733,7 +867,7 @@
         const roleNameMap = {
             'Account Executive': 'Sales',
             'Launch Consultant': 'Launch',
-            'MSM': 'MSM',
+            'MSM': 'CSM',
             'Operations': 'Ops',
             'Partnerships': 'Partner',
             'Solution Engineer': 'SE',
@@ -769,30 +903,50 @@
         console.log('Hostname:', window.location.hostname);
         console.log('Loading data from:', dataUrl);
         
-        fetch(dataUrl)
-            .then(response => {
+        // Load data and create initial heatmap
+        Promise.all([
+            fetch(dataUrl).then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            }),
+            fetch(jobsDataUrl).then(response => {
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 return response.json();
             })
-            .then(data => {
-                globalData = data;
-                currentData = data;
-                csvData = data.allEntries || [];
-                initializeFilters(data);
+        ])
+            .then(([typeData, taskData]) => {
+                console.log('=== Data Loaded Successfully ===');
+                console.log('Type view data:', typeData);
+                console.log('Task view data:', taskData);
                 
-                // Load jobs data for task view
-                return fetch(jobsDataUrl);
-            })
-            .then(response => response.json())
-            .then(data => {
-                jobsData = data;
-                console.log('Jobs data loaded:', data);
+                globalData = typeData;
+                currentData = typeData;
+                csvData = typeData.allEntries || [];
+                jobsData = taskData;
                 
-                // Start with task view
-                updateStats(jobsData);
-                createTasksHeatmap(jobsData);
+                console.log('Total entries in type data:', typeData.totalEntries);
+                console.log('Total entries in task data:', taskData.totalEntries);
+                console.log('All entries length:', csvData.length);
+                
+                initializeFilters(typeData);
+                
+                // Show the tasks view by default
+                updateStats(taskData);
+                createTasksHeatmap(taskData);
+                
+                // Verify data consistency
+                console.log('=== Data Consistency Check ===');
+                const taskSum = Object.values(taskData.jobCounts).reduce((a, b) => a + b, 0);
+                console.log('Sum of all task counts:', taskSum);
+                console.log('Should equal total entries:', taskData.totalEntries);
+                
+                // Check role distribution
+                const roleSum = Object.values(taskData.roleCounts || {}).reduce((a, b) => a + b, 0);
+                console.log('Sum of all role counts:', roleSum);
             })
             .catch(error => {
                 console.error('Error loading data:', error);
@@ -821,11 +975,17 @@
             const regionFilter = document.getElementById('region-filter').value;
             const dateFilter = parseInt(document.getElementById('date-filter').value);
             
+            console.log('=== Applying Filters ===');
+            console.log('Region filter:', regionFilter);
+            console.log('Date filter:', dateFilter);
+            
             let filteredEntries = globalData.allEntries;
+            console.log('Starting with', filteredEntries.length, 'total entries');
             
             // Apply region filter
             if (regionFilter !== 'all') {
                 filteredEntries = filteredEntries.filter(e => e.region === regionFilter);
+                console.log('After region filter:', filteredEntries.length, 'entries');
             }
             
             // Apply date filter
@@ -836,6 +996,7 @@
                     const entryDate = new Date(e.updatedAt);
                     return entryDate >= cutoffDate;
                 });
+                console.log('After date filter:', filteredEntries.length, 'entries');
             }
             
             // Rebuild heatmap data
@@ -877,7 +1038,7 @@
                 updateStats(jobsData);
                 createTasksHeatmap(jobsData);
             } else {
-                updateStats(currentData);
+            updateStats(currentData);
                 createTypeHeatmap(currentData);
             }
         }
@@ -891,9 +1052,9 @@
                 updateStats(jobsData);
                 createTasksHeatmap(jobsData);
             } else {
-                updateStats(globalData);
+            updateStats(globalData);
                 createTypeHeatmap(globalData);
-            }
+        }
         }
         
 
@@ -918,11 +1079,11 @@
             if (viewportWidth < 768) {
                 // Mobile
                 cellSize = 40;
-                margin = { top: 100, right: 20, bottom: 120, left: 150 };
+                margin = { top: 120, right: 40, bottom: 150, left: 180 };
             } else {
                 // Desktop
                 cellSize = 60;
-                margin = { top: 150, right: 20, bottom: 120, left: 180 };
+                margin = { top: 150, right: 40, bottom: 150, left: 220 };
             }
             
             const width = Math.max(containerWidth, data.roles.length * cellSize + margin.left + margin.right);
@@ -962,7 +1123,7 @@
                 .interpolator(t => d3.interpolateBlues(t * 0.9 + 0.1)); // Avoid pure white
             
             // Create cells - roles on X, types on Y
-            data.solutionTypes.forEach((solutionType, j) => {
+                data.solutionTypes.forEach((solutionType, j) => {
                 data.roles.forEach((role, i) => {
                     const value = (data.matrix && data.matrix[role] && data.matrix[role][solutionType]) || 0;
                     
@@ -972,11 +1133,30 @@
                         .attr("width", xScale.bandwidth())
                         .attr("height", yScale.bandwidth())
                         .attr("class", "cell")
+                        .attr("rx", 4)
+                        .attr("ry", 4)
                         .style("fill", value === 0 ? "#f9fafb" : colorScale(value))
+                        .style("cursor", value > 0 ? "pointer" : "default")
+                        .style("stroke", "white")
+                        .style("stroke-width", 2)
                         .on("mouseover", function(event) {
+                            if (value > 0) {
+                                d3.select(this)
+                                    .transition()
+                                    .duration(100)
+                                    .style("filter", "brightness(0.9) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))")
+                                    .style("transform", "scale(1.05)");
+                            }
                             showTooltip(event, role, solutionType, value);
                         })
                         .on("mouseout", function() {
+                            if (value > 0) {
+                                d3.select(this)
+                                    .transition()
+                                    .duration(100)
+                                    .style("filter", "none")
+                                    .style("transform", "scale(1)");
+                            }
                             if (window.innerWidth > 768) {
                                 hideTooltip();
                             }
@@ -988,7 +1168,7 @@
                                 
                                 if (lastTappedCell === cellKey) {
                                     // Second tap - open details
-                                    showDetails(role, solutionType, data);
+                            showDetails(role, solutionType, data);
                                     lastTappedCell = null;
                                     hideTooltip();
                                 } else {
@@ -1014,13 +1194,15 @@
                     // Add text label for non-zero values
                     if (value > 0) {
                         g.append("text")
-                            .attr("x", xScale(solutionType) + xScale.bandwidth() / 2)
-                            .attr("y", yScale(role) + yScale.bandwidth() / 2)
+                            .attr("x", xScale(role) + xScale.bandwidth() / 2)
+                            .attr("y", yScale(solutionType) + yScale.bandwidth() / 2)
                             .attr("text-anchor", "middle")
                             .attr("dominant-baseline", "middle")
                             .attr("class", "cell-value")
                             .style("fill", value > maxValue * 0.5 ? "white" : "#1f2937")
                             .style("pointer-events", "none")
+                            .style("font-size", viewportWidth < 768 ? "14px" : "16px")
+                            .style("font-weight", "700")
                             .text(value);
                     }
                 });
@@ -1033,12 +1215,21 @@
                 .append("text")
                 .attr("class", "x-axis-label axis-label")
                 .attr("x", d => xScale(d) + xScale.bandwidth() / 2)
-                .attr("y", data.solutionTypes.length * cellSize + 10)
-                .attr("transform", d => `rotate(45, ${xScale(d) + xScale.bandwidth() / 2}, ${data.solutionTypes.length * cellSize + 10})`)
+                .attr("y", data.solutionTypes.length * cellSize + 15)
+                .attr("transform", d => {
+                    const x = xScale(d) + xScale.bandwidth() / 2;
+                    const y = data.solutionTypes.length * cellSize + 15;
+                    return `rotate(45, ${x}, ${y})`;
+                })
                 .style("text-anchor", "start")
-                .style("font-size", viewportWidth < 768 ? "10px" : "11px")
-                .style("fill", "white")
-                .text(d => roleNameMap[d] || d);
+                .style("font-size", viewportWidth < 768 ? "10px" : "12px")
+                .style("fill", "#374151")  // Changed from white to dark gray
+                .style("font-weight", "600")
+                .text(d => {
+                    const label = roleNameMap[d] || d;
+                    console.log(`Type view X-axis label for ${d}: ${label}`);
+                    return label;
+                });
             
             // Add y-axis labels - solution types on the left
             g.selectAll(".y-axis-label")
@@ -1051,8 +1242,13 @@
                 .attr("dominant-baseline", "middle")
                 .style("text-anchor", "end")
                 .style("font-size", viewportWidth < 768 ? "10px" : "12px")
-                .style("fill", "white")
-                .text(d => solutionTypeMap[d] || d);
+                .style("fill", "#374151")  // Changed from white to dark gray
+                .style("font-weight", "600")
+                .text(d => {
+                    const label = solutionTypeMap[d] || d;
+                    console.log(`Type view Y-axis label for ${d}: ${label}`);
+                    return label;
+                });
                 
             // Add axis titles
             // Y-axis title (Types)
@@ -1062,7 +1258,7 @@
                 .attr("y", margin.left / 3)
                 .attr("x", -(data.solutionTypes.length * cellSize + margin.top) / 2)
                 .attr("text-anchor", "middle")
-                .style("fill", "white")
+                .style("fill", "#374151")  // Changed from white to dark gray
                 .style("font-size", "14px")
                 .style("font-weight", "bold")
                 .text("Solution Types");
@@ -1073,10 +1269,29 @@
                 .attr("x", margin.left + (data.roles.length * cellSize) / 2)
                 .attr("y", margin.top + data.solutionTypes.length * cellSize + margin.bottom - 20)
                 .attr("text-anchor", "middle")
-                .style("fill", "white")
+                .style("fill", "#374151")  // Changed from white to dark gray
                 .style("font-size", "14px")
                 .style("font-weight", "bold")
                 .text("Roles");
+                
+            // Debug logging for Type view
+            console.log('=== Type View Heatmap Debug ===');
+            console.log('Total entries:', data.totalEntries);
+            console.log('Roles:', data.roles);
+            console.log('Solution Types:', data.solutionTypes);
+            console.log('Matrix:', data.matrix);
+            
+            // Log matrix totals
+            let totalCells = 0;
+            data.roles.forEach(role => {
+                data.solutionTypes.forEach(type => {
+                    const value = (data.matrix[role] && data.matrix[role][type]) || 0;
+                    if (value > 0) {
+                        totalCells += value;
+                    }
+                });
+            });
+            console.log('Total cell values:', totalCells);
         }
         
         // Define solutionTypeMap globally
@@ -1141,7 +1356,7 @@
             const displayRole = roleNameMap[role] || role;
             showModal(`${displayRole} - ${displayName}`, relevantEntries);
         }
-        
+            
         function renderModalContent(relevantEntries, modalBody) {
             const modal = document.getElementById("modal");
             
@@ -1423,17 +1638,16 @@
             const statsContainer = document.getElementById('stats-container');
             
             if (isTaskView && data.jobCounts) {
-                // Task view stats
-                const topTasks = Object.entries(data.jobCounts)
-                    .sort((a, b) => b[1] - a[1])
-                    .slice(0, 4);
+                // Task view stats - show all tasks
+                const allTasks = Object.entries(data.jobCounts)
+                    .sort((a, b) => b[1] - a[1]);
                 
                 statsContainer.innerHTML = `
                     <div class="stat-card" onclick="showAllSolutions()" style="cursor: pointer;">
                         <p class="stat-number">${data.totalEntries}</p>
                         <p class="stat-label">Total Solutions</p>
                     </div>
-                    ${topTasks.map(([task, count]) => `
+                    ${allTasks.map(([task, count]) => `
                         <div class="stat-card" onclick="showTaskDetail('${task}')" style="cursor: pointer;">
                             <p class="stat-number">${count}</p>
                             <p class="stat-label" style="font-size: 0.8rem;">${taskNameMap[task] || task}</p>
@@ -1441,26 +1655,26 @@
                     `).join('')}
                 `;
             } else {
-                // Type view stats
-                const activeRoles = data.roles ? data.roles.length : 0;
+                // Type view stats - show all roles
+                const allRoles = data.roles.map(role => {
+                    let count = 0;
+                    data.solutionTypes.forEach(type => {
+                        count += (data.matrix[role] && data.matrix[role][type]) || 0;
+                    });
+                    return [role, count];
+                }).sort((a, b) => b[1] - a[1]);
                 
                 statsContainer.innerHTML = `
                     <div class="stat-card" onclick="showAllSolutions()" style="cursor: pointer;">
                         <p class="stat-number">${data.totalEntries}</p>
                         <p class="stat-label">Total Solutions</p>
                     </div>
-                    <div class="stat-card" onclick="showRolesList()" style="cursor: pointer;">
-                        <p class="stat-number">${data.roles.length}</p>
-                        <p class="stat-label">Unique Roles</p>
-                    </div>
-                    <div class="stat-card" onclick="showSolutionTypesList()" style="cursor: pointer;">
-                        <p class="stat-number">${data.solutionTypes.length}</p>
-                        <p class="stat-label">Solution Types</p>
-                    </div>
-                    <div class="stat-card">
-                        <p class="stat-number">${activeRoles}</p>
-                        <p class="stat-label">Active Roles</p>
-                    </div>
+                    ${allRoles.map(([role, count]) => `
+                        <div class="stat-card" onclick="showRoleDetail('${role}')" style="cursor: pointer;">
+                            <p class="stat-number">${count}</p>
+                            <p class="stat-label" style="font-size: 0.8rem;">${roleNameMap[role] || role}</p>
+                        </div>
+                    `).join('')}
                 `;
             }
         }
@@ -1481,10 +1695,10 @@
             // Calculate dimensions similar to default heatmap
             let cellSize = isMobile ? 40 : 60;
             const margin = { 
-                top: isMobile ? 100 : 150, 
-                right: 20, 
-                bottom: isMobile ? 80 : 120, 
-                left: isMobile ? 100 : 150 
+                top: isMobile ? 120 : 150, 
+                right: 40, 
+                bottom: isMobile ? 120 : 150, 
+                left: isMobile ? 180 : 220 
             };
             
             const width = Math.max(containerWidth, data.roles.length * cellSize + margin.left + margin.right);
@@ -1544,6 +1758,7 @@
                             .on("mouseover", function(event) {
                                 const displayTask = taskNameMap[task] || task;
                                 const displayRole = roleNameMap[role] || role;
+                                const tooltip = d3.select('.tooltip');  // Add this line to ensure tooltip is in scope
                                 tooltip.html(`<strong>${displayTask}</strong><br>${displayRole}<br>Solutions: ${value}`)
                                     .style("left", (event.pageX + 10) + "px")
                                     .style("top", (event.pageY - 28) + "px")
@@ -1551,13 +1766,36 @@
                                 d3.select(this).attr("stroke-width", 3);
                             })
                             .on("mousemove", function(event) {
+                                const tooltip = d3.select('.tooltip');  // Add this line to ensure tooltip is in scope
                                 tooltip.style("left", (event.pageX + 10) + "px")
                                     .style("top", (event.pageY - 28) + "px");
                             })
                             .on("mouseout", function() {
+                                const tooltip = d3.select('.tooltip');  // Add this line to ensure tooltip is in scope
                                 tooltip.style("opacity", 0);
                                 d3.select(this).attr("stroke-width", 1);
                             });
+                    }
+                });
+            });
+            
+            // Add text labels for non-zero values
+            data.jobs.forEach(task => {
+                data.roles.forEach(role => {
+                    const value = data.matrix[task]?.[role] || 0;
+                    
+                    if (value > 0) {
+                        g.append("text")
+                            .attr("x", xScale(role) + xScale.bandwidth() / 2)
+                            .attr("y", yScale(task) + yScale.bandwidth() / 2)
+                            .attr("text-anchor", "middle")
+                            .attr("dominant-baseline", "middle")
+                            .attr("class", "cell-value")
+                            .style("fill", value > maxValue * 0.5 ? "white" : "#1f2937")
+                            .style("pointer-events", "none")
+                            .style("font-size", isMobile ? "14px" : "16px")
+                            .style("font-weight", "700")
+                            .text(value);
                     }
                 });
             });
@@ -1568,28 +1806,38 @@
                 .selectAll("text")
                 .data(data.roles)
                 .enter().append("text")
-                .attr("class", "axis-label")
+                .attr("class", "x-axis-label axis-label")
                 .attr("x", d => xScale(d) + xScale.bandwidth() / 2)
                 .attr("y", 0)
                 .attr("text-anchor", "start")
                 .attr("transform", d => `rotate(45, ${xScale(d) + xScale.bandwidth() / 2}, 0)`)
-                .style("fill", "white")
-                .style("font-size", "12px")
-                .text(d => roleNameMap[d] || d);
+                .style("fill", "#374151")  // Changed from white to dark gray
+                .style("font-size", isMobile ? "10px" : "12px")
+                .style("font-weight", "600")
+                .text(d => {
+                    const label = roleNameMap[d] || d;
+                    console.log(`X-axis label for ${d}: ${label}`);
+                    return label;
+                });
             
             // Y axis - tasks on the left
             g.append("g")
                 .selectAll("text")
                 .data(data.jobs)
                 .enter().append("text")
-                .attr("class", "axis-label")
+                .attr("class", "y-axis-label axis-label")
                 .attr("x", -10)
                 .attr("y", d => yScale(d) + yScale.bandwidth() / 2)
                 .attr("text-anchor", "end")
-                .attr("alignment-baseline", "middle")
-                .style("fill", "white")
-                .style("font-size", "12px")
-                .text(d => taskNameMap[d] || d);
+                .attr("dominant-baseline", "middle")
+                .style("fill", "#374151")  // Changed from white to dark gray
+                .style("font-size", isMobile ? "10px" : "12px")
+                .style("font-weight", "600")
+                .text(d => {
+                    const label = taskNameMap[d] || d;
+                    console.log(`Y-axis label for ${d}: ${label}`);
+                    return label;
+                });
                 
             // Add axis titles
             // Y-axis title (Tasks)
@@ -1599,7 +1847,7 @@
                 .attr("y", margin.left / 3)
                 .attr("x", -(height - margin.top - margin.bottom) / 2)
                 .attr("text-anchor", "middle")
-                .style("fill", "white")
+                .style("fill", "#374151")  // Changed from white to dark gray
                 .style("font-size", "14px")
                 .style("font-weight", "bold")
                 .text("Tasks");
@@ -1610,104 +1858,46 @@
                 .attr("x", margin.left + (data.roles.length * cellSize) / 2)
                 .attr("y", height - margin.bottom / 3)
                 .attr("text-anchor", "middle")
-                .style("fill", "white")
+                .style("fill", "#374151")  // Changed from white to dark gray
                 .style("font-size", "14px")
                 .style("font-weight", "bold")
                 .text("Roles");
+                
+            // Debug logging for matrix
+            console.log('=== Tasks Heatmap Debug ===');
+            console.log('Total entries:', data.totalEntries);
+            console.log('Jobs:', data.jobs);
+            console.log('Job counts:', data.jobCounts);
+            console.log('Roles:', data.roles);
+            console.log('Matrix:', data.matrix);
+            
+            // Log each cell's expected vs actual count
+            data.jobs.forEach(job => {
+                const expectedCount = data.jobCounts[job] || 0;
+                const actualEntries = getEntriesForTask(job);
+                console.log(`Job "${job}": Expected ${expectedCount}, Got ${actualEntries.length}`);
+            });
         }
         
         // Helper function to get entries for a specific task
         function getEntriesForTask(task) {
-            // Enhanced job patterns with weights matching the Python script
-            const jobPatterns = {
-                'Account Intelligence & Research': {
-                    keywords: ['research', 'analyze', 'merchant pain', 'discover', 'competitive', 'competitor',
-                               'insight', 'understand', 'overview', 'brief', 'competebot', 'vertical', 'naics'],
-                    weight: 1.5
-                },
-                'Content Generation & Localization': {
-                    keywords: ['create', 'generate', 'template', 'copy', 'marketing', 'translate',
-                               'multi-lingual', 'language', 'spanish', 'heygen', 'presentation', 'video',
-                               'webinar', 'podcast'],
-                    weight: 1.0
-                },
-                'Sales Process Optimization': {
-                    keywords: ['sales', 'account plan', 'pipeline', 'discovery', 'pitch', 'deal',
-                               'opportunity', 'outreach', 'prospecting', 'cold', 'sdr', 'boost.*sales',
-                               'copilot.*account'],
-                    weight: 1.5
-                },
-                'Data Analysis & Reporting': {
-                    keywords: ['data', 'report', 'metric', 'dashboard', 'payment rate', 'track',
-                               'monitor', 'looker', 'sql', 'query', 'analytics', 'scrape', 'print.*rates'],
-                    weight: 1.2
-                },
-                'Workflow Automation': {
-                    keywords: ['automate', 'auto-', 'scale', 'efficient', 'faster', 'streamline',
-                               'integrate', 'workflow', 'process', 'bulk', 'at scale'],
-                    weight: 1.3
-                },
-                'Knowledge Centralization': {
-                    keywords: ['centralize', 'organize', 'document', 'guide', 'wiki', 'hub',
-                               'repository', 'notebook', 'notebooklm', 'knowledge', 'vivarium'],
-                    weight: 1.2
-                },
-                'Partner & Collaboration': {
-                    keywords: ['partner', 'agency', 'collaboration', 'co-sell', 'channel',
-                               'pse', 'pdm', 'overdose', 'joint'],
-                    weight: 1.4
-                },
-                'Learning & Training': {
-                    keywords: ['learn', 'train', 'onboard', 'educate', 'enablement', 'course',
-                               'tutorial', 'how-to', 'tips', 'academy', 'trainer'],
-                    weight: 1.1
-                },
-                'Communication & Outreach': {
-                    keywords: ['communicate', 'outreach', 'email', 'share', 'messaging', 'engage',
-                               'reach', 'gmass', 'sequence', 'campaign'],
-                    weight: 1.0
-                },
-                'Product & Demo Creation': {
-                    keywords: ['demo', 'mockup', 'prototype', 'showcase', 'present', 'build',
-                               'cursor', 'create.*tool', 'html', 'converter'],
-                    weight: 1.3
-                }
-            };
+            // Use the current view's data with pre-categorized jobs
+            const entries = isTaskView ? (jobsData.allEntries || []) : (currentData.allEntries || []);
             
-            return jobsData.allEntries.filter(entry => {
-                const title = entry.title.toLowerCase();
-                const desc = entry.description.toLowerCase();
-                const combined = title + ' ' + desc;
-                
-                // Calculate scores for all jobs
-                const jobScores = {};
-                for (const [job, config] of Object.entries(jobPatterns)) {
-                    let score = 0;
-                    for (const keyword of config.keywords) {
-                        if (keyword.includes('*')) {
-                            const pattern = new RegExp(keyword.replace(/\*/g, '.*'), 'i');
-                            if (pattern.test(combined)) {
-                                score += config.weight;
-                            }
-                        } else if (combined.includes(keyword)) {
-                            score += config.weight;
-                        }
-                    }
-                    if (score > 0) {
-                        jobScores[job] = score;
-                    }
-                }
-                
-                // Assign to best matching job or 'Other'
-                if (Object.keys(jobScores).length > 0) {
-                    const bestJob = Object.keys(jobScores).reduce((a, b) => 
-                        jobScores[a] > jobScores[b] ? a : b
-                    );
-                    return bestJob === task;
-                } else {
-                    return task === 'Other';
-                }
-            });
+            console.log(`Getting entries for task "${task}" from ${entries.length} total entries`);
+            
+            // Use the pre-categorized job field
+            const matchedEntries = entries.filter(entry => entry.job === task);
+            
+            console.log(`Found ${matchedEntries.length} entries for task "${task}"`);
+            
+            // Verify against expected count
+            const expectedCount = jobsData.jobCounts[task] || 0;
+            if (matchedEntries.length !== expectedCount) {
+                console.warn(`⚠️ Count mismatch for "${task}": Found ${matchedEntries.length}, Expected ${expectedCount}`);
+            }
+            
+            return matchedEntries;
         }
         
         // Show details for task-role combination
@@ -1734,21 +1924,36 @@
             showModal(`Task: ${displayTask}`, filteredData);
         }
         
+        // Show role detail view
+        function showRoleDetail(role) {
+            const allEntries = currentData.allEntries || [];
+            const filteredData = allEntries.filter(entry => {
+                const entryRoles = entry.roles || [];
+                return entryRoles.includes(role);
+            });
+            const displayRole = roleNameMap[role] || role;
+            console.log(`Role ${role}: Found ${filteredData.length} entries`);
+            showModal(`Role: ${displayRole}`, filteredData);
+        }
+        
         // List view functions
         function showAllSolutions() {
             // Show all solutions in the modal
-            showModal('All Solutions', csvData);
+            const allEntries = isTaskView ? jobsData.allEntries : currentData.allEntries;
+            showModal('All Solutions', allEntries);
         }
         
         function showRolesList() {
             // This shows all solutions that have been tagged with roles
             // Each solution may have multiple roles
-            showModal('All Solutions by Role', csvData);
+            const allEntries = isTaskView ? jobsData.allEntries : currentData.allEntries;
+            showModal('All Solutions by Role', allEntries);
         }
         
         function showSolutionTypesList() {
             // This shows all solutions organized by their type
-            showModal('All Solutions by Type', csvData);
+            const allEntries = isTaskView ? jobsData.allEntries : currentData.allEntries;
+            showModal('All Solutions by Type', allEntries);
         }
 
     </script>
